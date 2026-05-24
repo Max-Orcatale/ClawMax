@@ -1,0 +1,25 @@
+# Local Hermes runtime data
+.hermes/
+*.env
+.env
+.env.*
+
+# Generated reports and articles
+reports/*
+articles/*
+!reports/.gitkeep
+!articles/.gitkeep
+
+# Python caches and test artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.swp
+.DS_Store

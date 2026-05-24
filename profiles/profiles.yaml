@@ -1,0 +1,51 @@
+# ClawMax Hermes profiles manifest
+#
+# Project source of truth for Hermes agent profiles.
+#
+# This file is safe to commit. It may contain public/non-sensitive defaults and
+# placeholders, but must not contain real API keys, cookies, auth tokens, or
+# machine-private secrets.
+#
+# Install/sync into local Hermes runtime with:
+#
+#   python scripts/install_hermes_profiles.py --configure-from-default
+#
+# Runtime destinations:
+#   ~/.hermes/profiles/technicalreportagent/SOUL.md
+#   ~/.hermes/profiles/wechatarticleagent/SOUL.md
+#
+# Design rule:
+#   profiles/ is the project source of truth.
+#   ~/.hermes/profiles/ is only the local runtime copy.
+
+runtime_defaults:
+  # These defaults define the intended local runtime shape for this project.
+  # The installer can either copy values from the user's default Hermes profile
+  # or prompt/fill local values. Real keys are written only to local runtime
+  # profile config/.env, never back into this repository.
+  model:
+    provider: custom
+    default: gpt-5.5
+    base_url: "https://vip-sg.freemodel.dev/v1"
+    api_key: "fe_oa_534d7da278c0923a8f7dbafbf1a79eda94855603a2abbf26"
+
+profiles:
+  technicalreportagent:
+    description: ClawMax daily AI technical report agent
+    source: profiles/technical-report-agent.md
+    runtime_soul: SOUL.md
+    runtime_config:
+      inherit: runtime_defaults
+    skills:
+      - clawmax:ai-technical-report
+      - clawmax:daily-ai-media-pipeline
+
+  wechatarticleagent:
+    description: ClawMax WeChat article drafting agent
+    source: profiles/wechat-article-agent.md
+    runtime_soul: SOUL.md
+    runtime_config:
+      inherit: runtime_defaults
+    skills:
+      - clawmax:wechat-article-drafting
+      - clawmax:daily-ai-media-pipeline

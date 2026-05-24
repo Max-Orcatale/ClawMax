@@ -1,0 +1,69 @@
+# ClawMax project configuration
+# Non-sensitive settings only. Secrets such as API keys belong in .env or Hermes secret config.
+
+project:
+  name: ClawMax
+  timezone: Asia/Shanghai
+  language: zh-CN
+
+schedule:
+  daily_run_time: "06:00"
+
+outputs:
+  reports_dir: reports
+  articles_dir: articles
+  report_filename: technical-report.md
+  sources_filename: sources.json
+  brief_filename: brief.json
+  image_prompts_filename: image-prompts.json
+  images_dirname: images
+  article_filename: wechat-draft.md
+  review_notes_filename: review-notes.md
+
+agents:
+  technical_report:
+    enabled: true
+    profile: technicalreportagent
+    skills:
+      - ai-technical-report
+      - daily-ai-media-pipeline
+    include_images: true
+    max_images_per_report: 3
+  wechat_article:
+    enabled: true
+    profile: wechatarticleagent
+    skills:
+      - wechat-article-drafting
+      - daily-ai-media-pipeline
+
+image_gen:
+  provider: openai
+  model: gpt-image-2-medium
+  default_quality: medium
+  default_size: 1536x1024
+  output_subdir: images
+  save_prompts: true
+
+research:
+  tracked_companies:
+    - OpenAI
+    - Anthropic
+    - Google DeepMind
+    - Meta AI
+    - xAI
+    - Mistral
+    - DeepSeek
+  tracked_topics:
+    - agents
+    - reasoning
+    - multimodal models
+    - code generation
+    - AI infra
+    - embodied AI
+    - robotics
+
+content:
+  wechat_sections:
+    - AI 前沿
+    - 浪里淘金
+  require_human_review: true
