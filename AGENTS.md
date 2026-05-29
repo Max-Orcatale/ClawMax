@@ -92,6 +92,12 @@ Hermes 识别规则：
 ├── config.yaml       # 非敏感运行配置
 ├── profiles/         # 不同agent人格文件与专属配置
 ├── skills/           # 项目专属 skill 源文件
+├── memory/
+│   ├── covered-topics.json       # 项目级报道记忆
+│   └── source-quality.json       # 来源质量记录
+├── runs/
+│   ├── daily-report-runs.jsonl   # 运行总日志
+│   └── <run-id>.json             # 单次运行详情
 ├── reports/          # 技术报告输出
 ├── articles/         # 微信稿件输出
 ├── tests/            # 单元测试或流程测试

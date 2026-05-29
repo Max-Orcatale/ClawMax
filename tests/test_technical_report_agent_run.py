@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -50,6 +51,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PERSONA_FILE = REPO_ROOT / "profiles" / "technical-report-agent.md"
 CONFIG_FILE = REPO_ROOT / "config.yaml"
 REPORTS_DIR = REPO_ROOT / "reports"
+RUNS_DIR = REPO_ROOT / "runs"
+PROJECT_MEMORY_DIR = REPO_ROOT / "memory"
+COVERED_TOPICS_FILE = PROJECT_MEMORY_DIR / "covered-topics.json"
+SOURCE_QUALITY_FILE = PROJECT_MEMORY_DIR / "source-quality.json"
 
 TECHNICAL_REPORT_SKILL = "clawmax:ai-technical-report"
 PIPELINE_SKILL = "clawmax:daily-ai-media-pipeline"
@@ -103,6 +108,17 @@ REQUIRED_SOURCE_KEYS = {
 
 VALID_CONFIDENCE = {"high", "medium", "low"}
 
+PROXY_ENV_KEYS = (
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+    "no_proxy",
+)
+
 
 class TestFailure(RuntimeError):
     pass
@@ -119,6 +135,30 @@ def require(condition: bool, message: str) -> None:
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def write_json(path: Path, data) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def append_jsonl(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(data, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def now_iso() -> str:
+    return dt.datetime.now(dt.timezone.utc).astimezone().isoformat(timespec="seconds")
+
+
+def load_json_file(path: Path, default):
+    if not path.exists():
+        return default
+    try:
+        return json.loads(read_text(path))
+    except json.JSONDecodeError:
+        return default
 
 
 def load_json(path: Path):
@@ -159,6 +199,28 @@ def check_prerequisites() -> None:
     require("enabled  web" in tools_result.stdout or "✓ enabled  web" in tools_result.stdout, "technicalreportagent profile must have web toolset enabled for real-source report generation")
 
 
+def proxy_env_snapshot() -> dict[str, str]:
+    return {key: os.environ[key] for key in PROXY_ENV_KEYS if os.environ.get(key)}
+
+
+def build_subprocess_env() -> dict[str, str]:
+    env = os.environ.copy()
+    for key, value in proxy_env_snapshot().items():
+        env[key] = value
+    return env
+
+
+def print_proxy_status() -> None:
+    proxies = proxy_env_snapshot()
+    if not proxies:
+        print("Proxy env: none detected; Hermes will run without HTTP(S)/SOCKS proxy env vars.")
+        return
+    print("Proxy env inherited by Hermes:")
+    for key in PROXY_ENV_KEYS:
+        if key in proxies:
+            print(f"- {key}={proxies[key]}")
+
+
 def build_real_prompt(output_label: str) -> str:
     return f"""
 请生成一份真实来源的 ClawMax 每日 AI 技术报告。
@@ -169,7 +231,9 @@ def build_real_prompt(output_label: str) -> str:
 - mode: real sources
 - output_dir: reports/{output_label}/
 - outputs: technical-report.md, sources.json, brief.json
-- source budget: 3-6 high-quality sources
+- source window: rolling recent window, not only today
+- source budget: 4-8 high-quality sources
+- include source types: official updates, papers/benchmarks, GitHub projects/releases, developer ecosystem signals
 - network timeout per request: 15 seconds
 
 要求：
@@ -237,6 +301,7 @@ def run_hermes(output_label: str, timeout_seconds: int, *, mock_smoke: bool) -> 
     process = subprocess.Popen(
         command,
         cwd=REPO_ROOT,
+        env=build_subprocess_env(),
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -333,7 +398,7 @@ def validate_report(path: Path, *, mock_smoke: bool) -> None:
     require(sum(1 for marker in DEPTH_MARKERS if marker in text) >= 4, "real-source report should show deeper analysis markers like 事实更新/技术背景/影响判断/后续观察")
 
 
-def validate_outputs(output_label: str, *, mock_smoke: bool) -> None:
+def validate_outputs(output_label: str, *, mock_smoke: bool) -> dict:
     output_dir = REPORTS_DIR / output_label
     report_path = output_dir / "technical-report.md"
     sources_path = output_dir / "sources.json"
@@ -347,6 +412,93 @@ def validate_outputs(output_label: str, *, mock_smoke: bool) -> None:
     validate_report(report_path, mock_smoke=mock_smoke)
     validate_sources(sources_path, mock_smoke=mock_smoke)
     validate_brief(brief_path)
+    return {
+        "output_dir": str(output_dir.relative_to(REPO_ROOT)),
+        "report_path": str(report_path.relative_to(REPO_ROOT)),
+        "sources_path": str(sources_path.relative_to(REPO_ROOT)),
+        "brief_path": str(brief_path.relative_to(REPO_ROOT)),
+        "brief": load_json(brief_path),
+        "sources": load_json(sources_path),
+        "report_chars": len(read_text(report_path)),
+    }
+
+
+def normalize_topic_title(value: str) -> str:
+    return " ".join(str(value).strip().split())[:160]
+
+
+def update_covered_topics(run_id: str, output_label: str, validation: dict) -> int:
+    brief = validation.get("brief") or {}
+    existing = load_json_file(COVERED_TOPICS_FILE, [])
+    if not isinstance(existing, list):
+        existing = []
+    by_topic = {normalize_topic_title(item.get("topic", "")): item for item in existing if isinstance(item, dict)}
+
+    candidates: list[str] = []
+    for item in brief.get("top_items", []):
+        if isinstance(item, dict):
+            candidates.append(item.get("title") or item.get("topic") or item.get("summary") or "")
+        else:
+            candidates.append(str(item))
+    if not candidates and brief.get("title"):
+        candidates.append(str(brief["title"]))
+
+    updated_count = 0
+    for raw_title in candidates:
+        topic = normalize_topic_title(raw_title)
+        if not topic:
+            continue
+        record = by_topic.get(topic, {"topic": topic, "first_covered_at": now_iso(), "covered_count": 0})
+        record.update(
+            {
+                "last_covered_at": now_iso(),
+                "last_output_label": output_label,
+                "last_run_id": run_id,
+                "last_summary": normalize_topic_title(brief.get("summary", "")),
+                "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation.",
+            }
+        )
+        record["covered_count"] = int(record.get("covered_count", 0)) + 1
+        by_topic[topic] = record
+        updated_count += 1
+
+    write_json(COVERED_TOPICS_FILE, sorted(by_topic.values(), key=lambda item: item.get("topic", "")))
+    return updated_count
+
+
+def update_source_quality(run_id: str, output_label: str, validation: dict) -> int:
+    data = load_json_file(SOURCE_QUALITY_FILE, {})
+    if not isinstance(data, dict):
+        data = {}
+    updated_count = 0
+    for source in validation.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        url = str(source.get("url", ""))
+        host = urlparse(url).netloc.lower()
+        if not host:
+            continue
+        record = data.get(host, {"host": host, "seen_count": 0, "confidence_counts": {}})
+        record["seen_count"] = int(record.get("seen_count", 0)) + 1
+        record["last_seen_at"] = now_iso()
+        record["last_output_label"] = output_label
+        record["last_run_id"] = run_id
+        confidence = str(source.get("confidence", "unknown"))
+        counts = record.setdefault("confidence_counts", {})
+        counts[confidence] = int(counts.get(confidence, 0)) + 1
+        tags = set(record.get("tags", []))
+        for tag in source.get("tags", []):
+            tags.add(str(tag))
+        record["tags"] = sorted(tags)
+        data[host] = record
+        updated_count += 1
+    write_json(SOURCE_QUALITY_FILE, dict(sorted(data.items())))
+    return updated_count
+
+
+def write_run_log(run_id: str, event: dict) -> None:
+    append_jsonl(RUNS_DIR / "daily-report-runs.jsonl", {"run_id": run_id, **event})
+    write_json(RUNS_DIR / f"{run_id}.json", {"run_id": run_id, **event})
 
 
 def make_output_label(args: argparse.Namespace) -> str:
@@ -377,7 +529,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    started_at = now_iso()
+    start_time = dt.datetime.now(dt.timezone.utc)
     output_label = make_output_label(args)
+    run_id = output_label
     output_dir = REPORTS_DIR / output_label
     command = build_command(output_label, mock_smoke=args.mock_smoke)
 
@@ -385,6 +540,7 @@ def main(argv: list[str]) -> int:
     print(f"Mode: {'mock smoke' if args.mock_smoke else 'real sources'}")
     print(f"Output label: {output_label}")
     print(f"Output dir: {output_dir}")
+    print_proxy_status()
 
     if args.dry_run:
         print("\nDry run command:\n")
@@ -399,10 +555,47 @@ def main(argv: list[str]) -> int:
     require(exit_code == 0, f"Hermes command failed with exit code {exit_code}")
 
     print("\nValidating generated files...\n")
-    validate_outputs(output_label, mock_smoke=args.mock_smoke)
+    validation = validate_outputs(output_label, mock_smoke=args.mock_smoke)
+    topics_updated = 0
+    sources_updated = 0
+    if not args.mock_smoke:
+        topics_updated = update_covered_topics(run_id, output_label, validation)
+        sources_updated = update_source_quality(run_id, output_label, validation)
+
+    finished_at = now_iso()
+    duration_seconds = round((dt.datetime.now(dt.timezone.utc) - start_time).total_seconds(), 3)
+    write_run_log(
+        run_id,
+        {
+            "status": "completed",
+            "mode": "mock_smoke" if args.mock_smoke else "real_sources",
+            "profile": PROFILE_NAME,
+            "skills": [TECHNICAL_REPORT_SKILL, PIPELINE_SKILL],
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "duration_seconds": duration_seconds,
+            "output_label": output_label,
+            "output_dir": validation["output_dir"],
+            "outputs": {
+                "report": validation["report_path"],
+                "sources": validation["sources_path"],
+                "brief": validation["brief_path"],
+            },
+            "metrics": {
+                "report_chars": validation["report_chars"],
+                "sources_used": len(validation.get("sources") or []),
+                "covered_topics_updated": topics_updated,
+                "source_hosts_updated": sources_updated,
+            },
+            "proxy_env_keys": sorted(proxy_env_snapshot().keys()),
+        },
+    )
 
     print("PASS: TechnicalReportAgent generated a valid report bundle.")
     print(f"Report bundle: {output_dir}")
+    print(f"Run log: {RUNS_DIR / (run_id + '.json')}")
+    if not args.mock_smoke:
+        print(f"Project memory updated: {COVERED_TOPICS_FILE}, {SOURCE_QUALITY_FILE}")
     return 0
 
 

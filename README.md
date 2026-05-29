@@ -7,6 +7,8 @@
 - `profiles/` 负责“谁来做”：定义 Agent 人格、职责边界和默认工作方式。
 - `skills/` 负责“怎么做”：定义可复用 SOP、质量标准和流程。
 - `scripts/` 负责把项目源文件同步到本地 Hermes runtime。
+- `memory/` 保存 ClawMax 项目级业务记忆，例如已报道话题和来源质量。
+- `runs/` 保存每次日报生成的运行日志。
 - `reports/` 和 `articles/` 分别保存技术报告和公众号草稿产物。
 
 ## 当前完成情况
@@ -70,6 +72,13 @@ articles/YYYY-MM-DD/
 │   └── install_hermes_profiles.py
 ├── tests/
 │   └── test_technical_report_agent_run.py
+├── memory/
+│   ├── covered-topics.json
+│   └── source-quality.json
+├── runs/
+│   ├── .gitkeep
+│   ├── daily-report-runs.jsonl
+│   └── <run-id>.json
 ├── reports/
 └── articles/
 ```
@@ -110,6 +119,29 @@ articles/YYYY-MM-DD/
 ~/.hermes/skills/clawmax/<skill-name>/
 ~/.hermes/profiles/<profile-name>/skills/clawmax/<skill-name>/
 ```
+
+### 项目级 memory：业务状态
+
+Hermes 本身有持久记忆功能，适合保存用户偏好、环境经验和通用工作习惯。ClawMax 另外维护项目级 `memory/`，用于保存可审计、可提交、团队共享的业务状态。
+
+当前项目记忆包括：
+
+- `memory/covered-topics.json`：记录已经报道过的话题、最后报道时间、重复报道策略。用于判断某个 AI 话题是否需要再次进入日报。
+- `memory/source-quality.json`：记录来源站点的出现次数、置信度分布和标签。用于后续优化检索优先级与失败兜底。
+
+两者不要混用：
+
+- 用户偏好、Hermes 使用经验：写入 Hermes 记忆。
+- ClawMax 的报道历史、来源质量、运行状态：写入项目 `memory/` 和 `runs/`。
+
+### runs：运行日志
+
+`runs/` 保存每次日报生成的结构化运行日志：
+
+- `runs/daily-report-runs.jsonl`：追加式总日志。
+- `runs/<run-id>.json`：单次运行详情。
+
+日志包含运行模式、profile、skills、输出文件、耗时、来源数量、更新了多少项目记忆，以及 Hermes 子进程继承了哪些代理环境变量。
 
 ### prompt：本次运行参数
 
@@ -306,6 +338,9 @@ articles/YYYY-MM-DD/
 默认要求：
 
 - 自动检索真实来源。
+- 检索窗口不是只看日历当天，而是近期滚动窗口：公司/产品/新闻通常看近 7-14 天，论文、benchmark、GitHub 项目和开发者工具可看近 30-90 天。
+- 如果某个主题以前已经提过，只有在出现新版本、新证据、热度继续升高、采用信号、benchmark 更新或争议升级时才再次纳入。
+- 覆盖来源应包含官方更新、论文/benchmark、GitHub 项目/Release、开发者生态信号和可信技术媒体。
 - 不使用 mock sources 冒充日报。
 - 不使用 `example.com` 作为事实来源。
 - 不把工程测试说明写进专业报告正文。
@@ -326,6 +361,42 @@ articles/YYYY-MM-DD/
 - 外部图片必须保留来源链接和版权/使用语境。
 - 图片是辅助材料，不替代来源证据。
 - 如果图片不是必要的，可以跳过。
+
+## 常见问题
+
+### 网络检索超时或连接被重置怎么办？
+
+真实来源检索依赖外部网站，出现 timeout、connection reset、TLS reset 或 403 都是正常风险。
+
+建议处理方式：
+
+- 确认本机代理环境变量是否生效：`env | grep -Ei '^(http|https|all|no)_proxy='`。
+- 对每个网络请求设置短超时，例如 10-20 秒。
+- 单个来源失败时跳过并记录，不要无限重试。
+- 优先使用更稳定的官方 RSS/API/GitHub API/arXiv API，而不是重网页爬取。
+- 对容易失败的站点准备备用来源，例如官方 blog、GitHub release、arXiv abs 页面、可信二级报道。
+- 不要因为某个站点失败而让整份日报失败；只要剩余来源足够，报告应继续生成，并在风险区标注覆盖不足。
+
+当前测试脚本会显式把父进程里的 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY` 及其小写形式传给 Hermes 子进程，并在运行开始时打印 `Proxy env inherited by Hermes`。这能确认 Hermes 进程启动时带了代理变量；但具体某个站点是否成功经过代理，还取决于对应工具/库是否支持这些环境变量。
+
+### `FAIL: brief.json missing key: title` 是什么意思？
+
+这表示报告主体和 `sources.json` 可能已经生成了，但测试脚本在校验 `brief.json` 时发现缺少必填字段 `title`。
+
+`brief.json` 是给后续公众号改写阶段使用的结构化交接文件，必须包含：
+
+```json
+{
+  "date": "YYYY-MM-DD",
+  "title": "报告标题",
+  "summary": "摘要",
+  "top_items": [],
+  "risks": [],
+  "ready_for_wechat_drafting": true
+}
+```
+
+如果缺少 `title`，说明 Agent 没有完全遵守输出 schema。修复方式是更新 `skills/ai-technical-report/SKILL.md` 或重新运行生成，让 `brief.json` 带上完整字段。
 
 ## 配置与安全
 

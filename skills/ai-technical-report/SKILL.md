@@ -111,13 +111,18 @@ If files already exist and may contain human edits, do not overwrite silently. P
 ## Workflow
 
 1. Clarify the date and scope if missing and not inferable.
-2. Unless the user explicitly provides `sources.json` or explicitly requests a mock/smoke test, collect real sources automatically from high-quality channels first:
+2. Unless the user explicitly provides `sources.json` or explicitly requests a mock/smoke test, collect real sources automatically from high-quality channels first. Do not limit the search to the literal calendar day. Use a rolling recent window by default:
+   - today and the last 7-14 days for company/product/release/news items;
+   - the last 30-90 days for papers, benchmarks, GitHub projects, and developer tools when they are gaining traction or remain strategically important;
+   - older items only when they explain the background of a current update.
+   Prioritize:
    - company official blogs and changelogs;
    - arXiv or paper pages;
-   - GitHub repositories and release notes;
+   - GitHub repositories, releases, changelogs, star/release activity, and developer ecosystem signals;
    - benchmark reports;
    - reputable technical blogs and news;
    - community sources only as lower-confidence signals.
+   If a topic appeared in a previous report, mention it again only when there is a new release, fresh evidence, rising community/developer attention, new benchmark result, adoption signal, or meaningful controversy. Otherwise, skip it to avoid repetition.
 3. For a normal daily report, do not use mock sources. Mock sources are only allowed for explicit engineering smoke tests, and smoke-test wording must not appear inside a professional `technical-report.md`.
 4. Normalize every source into a structured record.
 5. Deduplicate overlapping stories and prefer original sources over reposts.
@@ -195,6 +200,28 @@ Depth expectations:
 - `今日摘要` should synthesize cross-source themes, not describe the report-generation process.
 - Avoid generic phrases such as “值得关注” without explaining why.
 - If a source is too thin to support analysis, put it in `风险、争议与待确认信息` or omit it.
+
+## Output Schemas
+
+`sources.json` must be a JSON array. Each item must include:
+
+- `title`
+- `url`
+- `source_type`
+- `published_at`
+- `retrieved_at`
+- `summary`
+- `confidence`
+- `tags`
+
+`brief.json` must be a JSON object. It is the handoff file for downstream drafting and must include:
+
+- `date`: report date string.
+- `title`: concise report title.
+- `summary`: short executive summary.
+- `top_items`: list of major items worth carrying into downstream work.
+- `risks`: list of uncertainty, credibility, or follow-up risks.
+- `ready_for_wechat_drafting`: boolean; set `true` only when the report is ready for the WeChat drafting stage.
 
 ## Image Generation Rules
 

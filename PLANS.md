@@ -19,6 +19,8 @@
 - 本地 Hermes runtime 同步脚本。
 - 真实来源技术报告生成链路。
 - 技术报告集成测试脚本。
+- 项目级 `memory/` 业务记忆：`covered-topics.json` 与 `source-quality.json`。
+- 项目级 `runs/` 运行日志：追加式总日志和单次运行详情。
 - README 基础教程与项目架构说明。
 
 ### 进行中
@@ -189,25 +191,30 @@ articles/YYYY-MM-DD/wechat-draft.md
 ├── README.md
 ├── AGENTS.md
 ├── PLANS.md
-├── src/
-│   ├── agents/
-│   │   ├── technical_report_agent.py
-│   │   └── wechat_article_agent.py
-│   ├── tools/
-│   │   ├── search.py
-│   │   ├── github_search.py
-│   │   └── file_store.py
-│   └── workflows/
-│       └── daily_media_pipeline.py
-├── prompts/
-│   ├── technical_report.md
-│   └── wechat_article.md
+├── config.yaml
+├── profiles/
+│   ├── profiles.yaml
+│   ├── technical-report-agent.md
+│   └── wechat-article-agent.md
+├── skills/
+│   ├── ai-technical-report/
+│   ├── daily-ai-media-pipeline/
+│   └── wechat-article-drafting/
+├── scripts/
+│   └── install_hermes_profiles.py
+├── tests/
+│   └── test_technical_report_agent_run.py
+├── memory/
+│   ├── covered-topics.json
+│   └── source-quality.json
+├── runs/
+│   ├── daily-report-runs.jsonl
+│   └── <run-id>.json
 ├── reports/
-├── articles/
-└── tests/
+└── articles/
 ```
 
-如果 Hermes 已经有固定项目结构，应优先贴合 Hermes 的约定，而不是强行使用以上结构。
+`memory/` 是 ClawMax 项目级业务记忆，记录报道历史和来源质量；`runs/` 是项目级运行日志。Hermes 自带记忆仍用于用户偏好、环境经验和通用工作习惯，不作为 ClawMax 报道历史的唯一来源。
 
 ## 数据与来源
 
