@@ -101,6 +101,8 @@ Hermes 识别规则：
 ├── reports/          # 技术报告输出
 ├── articles/         # 微信稿件输出
 ├── tests/            # 单元测试或流程测试
+│   ├── test_technical_report_agent_run.py
+│   └── test_wechat_article_agent_run.py
 └── docs/             # 设计说明、使用说明、决策记录
 ```
 

@@ -27,7 +27,7 @@ runtime_defaults:
     provider: custom
     default: gpt-5.5
     base_url: "https://vip-sg.freemodel.dev/v1"
-    api_key: "fe_oa_534d7da278c0923a8f7dbafbf1a79eda94855603a2abbf26"
+    api_key: "<LOCAL_API_KEY>"
 
 profiles:
   technicalreportagent:

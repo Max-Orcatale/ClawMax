@@ -19,20 +19,24 @@
 - 本地 Hermes runtime 同步脚本。
 - 真实来源技术报告生成链路。
 - 技术报告集成测试脚本。
+- WeChatArticleAgent 文章生成脚本：读取已有报告，调用另一个 `wechatarticleagent` profile，输出 `wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
+- 公众号结构化数据第一版：`article.json` 用于后续自动排版、配图、QA 和发布。
+- 图片最小产物规范：报告和文章都使用本地 `images/` 目录与 `image-assets.json` 清单，先保证能保存、生成和引用图片。
+- 公众号最终文章包契约：`article.json` 是结构化源，后处理生成 `final-wechat-article.md`、`wechat-preview.html`、`image-assets.json`、`images/` 和完整 `metadata.json.generated_files`，其中 `generated_files` 覆盖顶层产物和实际保存的本地图片文件。
 - 项目级 `memory/` 业务记忆：`covered-topics.json` 与 `source-quality.json`。
 - 项目级 `runs/` 运行日志：追加式总日志和单次运行详情。
 - README 基础教程与项目架构说明。
 
 ### 进行中
 
-- WeChatArticleAgent 的完整自动化生成链路。
-- 报告到公众号草稿的完整联动验证。
+- WeChatArticleAgent 文章生成质量打磨与真实样例验证，重点是降低报告腔，让文章更接近公众号内容产品。
+- 报告到最终公众号文章包的完整联动验证。
 - 将真实来源日报生成进一步稳定化。
 
 ### 未完成
 
 - 每日定时调度。
-- 自动配图与外部图片整合的完整策略。
+- 自动配图与外部图片整合的完整策略（当前先做最小图片产物，不做复杂设计系统）。
 - 公众号后台自动发布。
 - ProductStrategyAgent。
 
@@ -51,9 +55,9 @@ TechnicalReportAgent 搜集 AI 前沿信息
 ↓
 生成专业技术报告
 ↓
-WeChatArticleAgent 改写成微信公众号推文
+WeChatArticleAgent 改写成微信公众号推文，并生成 `final-wechat-article.md`、`wechat-preview.html` 与结构化 `article.json`
 ↓
-人工审阅 / 修改 / 发布
+自动 QA / 排版 / 配图 / 发布能力逐步接入
 ```
 
 内容风格上有两个层次：
@@ -70,11 +74,10 @@ WeChatArticleAgent 改写成微信公众号推文
 
 第一阶段暂不做以下内容：
 
-- 自动登录微信公众号后台并直接发布。
+- 自动登录微信公众号后台并直接发布（当前先生成草稿、结构化数据、最终 Markdown 和本地 HTML 预览，最终目标仍是全自动发布）。
 - 产品 Agent 的完整实现。
 - 多平台分发，例如小红书、B 站、知乎、Twitter/X。
 - 复杂的用户画像、投放策略和商业化分析。
-- 完全无人审核的自动发布链路。
 
 这些可以在核心内容生产流程稳定后再做。
 
@@ -177,7 +180,13 @@ reports/YYYY-MM-DD/
 ↓
 WeChatArticleAgent
 ↓
-articles/YYYY-MM-DD/wechat-draft.md
+articles/YYYY-MM-DD/
+├── wechat-draft.md
+├── final-wechat-article.md
+├── wechat-preview.html
+├── article.json
+├── image-assets.json
+└── images/
 ↓
 人工审阅
 ↓
@@ -296,7 +305,7 @@ run-daily --date today --skip-search
 ↓
 生成 technical-report.md
 ↓
-生成 wechat-draft.md
+生成 wechat-draft.md、final-wechat-article.md、wechat-preview.html、article.json 和图片包
 ```
 
 验收标准：
@@ -331,9 +340,9 @@ run-daily --date today --skip-search
 
 验收标准：
 
-- 公众号草稿足够接近可发布状态。
-- 草稿中所有外链、事实和项目介绍可追溯。
-- 人工只需要做标题、语气和风险把关。
+- 公众号文章足够接近可发布状态。
+- 最终文章中所有外链、事实和项目介绍可追溯。
+- 人工只需要做标题、语气、图片和风险把关。
 
 ## 内容质量标准
 
@@ -368,7 +377,7 @@ run-daily --date today --skip-search
   对策：筛选标准加入“好讲、好玩、好试、能激发转发”的维度。
 
 - 风险：自动发布带来合规或事实错误。
-  对策：第一阶段只生成草稿，不自动发布。
+  对策：第一阶段只生成草稿、最终 Markdown、HTML 预览和本地素材包，不自动发布。
 
 ## 进展记录
 
@@ -377,24 +386,25 @@ run-daily --date today --skip-search
 ## 当前状态更新
 
 - 已验证 TechnicalReportAgent 的真实来源日报生成链路。
-- WeChatArticleAgent、自动调度、自动配图、自动发布仍未完成。
-- 后续规划应围绕“日报已通、草稿未通、调度未通”这一真实状态继续推进。
+- WeChatArticleAgent 已具备最终公众号文章包输出：`wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
+- 图片和预览链路已明确最小产物规范：保存到本地 `images/`，记录 `image-assets.json`，Markdown/HTML/JSON 使用相对路径引用。
+- 自动调度、复杂自动配图、自动发布仍未完成。
+- 后续规划应围绕“日报已通、最终文章包初通、调度未通、图片先最小可用”这一真实状态继续推进。
 
 ## 待决策问题
 
 1. Hermes 项目最终使用 Python、TypeScript，还是沿用已有 Hermes 模板？
 2. OpenAI API 调用是直接在本项目中封装，还是通过 Hermes 已有工具层调用？
 3. 搜索能力使用哪种来源：OpenAI 内置 Web search、第三方搜索 API、浏览器自动化，还是手工来源列表？
-4. 微信公众号是否只生成 Markdown 草稿，还是后续接入排版 HTML / 图片素材？
+4. 微信公众号是否只生成 Markdown 草稿，还是后续接入排版 HTML / 图片素材？当前决策：先生成 `final-wechat-article.md` + `wechat-preview.html` + `article.json` + 本地图片包，其中 HTML 是本地预览/审阅产物，不代表已接入公众号后台发布。
 5. `浪里淘金` 的素材范围是否允许包含游戏、娱乐、开发者玩具和非严肃 demo？
 
 ## 下一步
 
 建议先从最小可运行版本开始：
 
-1. 完成 `WeChatArticleAgent` 的输入输出文件格式。
-2. 完善 `wechat-article-drafting` skill 的质量要求与验收标准。
-3. 接入一个最小的日报到草稿转换样例。
-4. 再接入每天 6 点调度。
+1. 继续提升 `WeChatArticleAgent` 的真实文章质量，减少报告腔并加强读者收益感。
+2. 验证最终文章包契约：`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json.generated_files`、`image-assets.json` 与 `images/` 一致。
+3. 接入每天 6 点调度。
 
-完成这一步后，再完善自动配图和调度。
+完成这一步后，再完善复杂自动配图、排版和调度。

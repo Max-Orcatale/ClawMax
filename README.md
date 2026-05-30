@@ -19,13 +19,14 @@
 - 真实来源 AI 技术报告生成链路。
 - 集成测试脚本。
 - README / 安装 / 目录规范。
+- 图片保存、生成与文章引用的最小产物规范。
 
 未完成：
 
 - WeChatArticleAgent 的完整自动化生成链路。
 - 日报到公众号草稿的完整联动验证。
 - 每日定时调度。
-- 自动配图与外部图片整合的完整策略。
+- 自动配图与外部图片整合的完整策略（当前只有最小图片产物规范）。
 - 公众号后台自动发布。
 - ProductStrategyAgent。
 
@@ -229,18 +230,48 @@ python -u tests/test_technical_report_agent_run.py --timeout 540
 - 生成报告到 `reports/YYYY-MM-DD-real-test-HHMMSS/`
 - 验证 `technical-report.md`、`sources.json`、`brief.json`
 
-### 5. 查看生成结果
+### 5. 基于技术报告生成最终公众号文章包
 
 ```bash
-ls reports/*real-test-* | tail
-sed -n '1,160p' reports/<generated-report-dir>/technical-report.md
+python -u tests/test_wechat_article_agent_run.py \
+  --report-label <generated-report-dir> \
+  --timeout 540
+```
+
+这个命令会：
+
+- 使用另一个 Hermes profile：`wechatarticleagent`。
+- 加载 `clawmax:wechat-article-drafting`。
+- 加载 `clawmax:daily-ai-media-pipeline`。
+- 读取 `reports/<generated-report-dir>/technical-report.md`、`sources.json`、`brief.json`。
+- 生成 `articles/<generated-report-dir>/wechat-draft.md`。
+- 生成结构化数据 `articles/<generated-report-dir>/article.json`。
+- 运行后处理，生成 `articles/<generated-report-dir>/final-wechat-article.md`。
+- 生成轻量本地 HTML 预览 `articles/<generated-report-dir>/wechat-preview.html`，用于浏览器审阅排版效果。
+- 生成图片清单 `articles/<generated-report-dir>/image-assets.json` 和自包含图片目录 `articles/<generated-report-dir>/images/`。
+- 生成交接元数据 `articles/<generated-report-dir>/metadata.json`，其中 `generated_files` 会列出 Markdown、HTML、JSON 和图片清单。
+- 让公众号稿件更接近内容产品，而不是专业报告缩写；文风参考只来自用户后续明确提供的公众号素材或可追溯来源。
+- 在文末生成 `参考与信息来源`；如果实际采用这些公众号作为信息来源或选题线索，必须注明。
+- 校验必需栏目、JSON schema、最终 Markdown、HTML 预览和图片 manifest。
+- 写入 `runs/wechat-article-runs.jsonl` 和 `runs/<run-id>.json`。
+
+这里的 Python 脚本不是公众号写稿程序。真正写公众号内容的是 Hermes 里的 `WeChatArticleAgent`；Python 只负责调度、传参、校验和记录日志。
+
+### 6. 查看生成结果
+
+```bash
+sed -n '1,160p' articles/<generated-report-dir>/final-wechat-article.md
+python -m json.tool articles/<generated-report-dir>/article.json | sed -n '1,160p'
+python -m json.tool articles/<generated-report-dir>/metadata.json | sed -n '1,160p'
 ```
 
 或直接打开：
 
 ```bash
-less reports/<generated-report-dir>/technical-report.md
+less articles/<generated-report-dir>/final-wechat-article.md
+xdg-open articles/<generated-report-dir>/wechat-preview.html 2>/dev/null || true
 ```
+
 
 ## 常用命令
 
@@ -261,6 +292,16 @@ python scripts/install_hermes_profiles.py --configure-from-default
 ```bash
 python -u tests/test_technical_report_agent_run.py --timeout 540
 ```
+
+### 运行公众号草稿生成测试
+
+```bash
+python -u tests/test_wechat_article_agent_run.py \
+  --report-label <generated-report-dir> \
+  --timeout 540
+```
+
+这个脚本使用 `wechatarticleagent` profile 调用另一个公众号 Agent。Python 只负责选择输入报告、传入本次运行参数、校验 `wechat-draft.md` / `final-wechat-article.md` / `wechat-preview.html` / `article.json` / `metadata.json` / `image-assets.json`、写入运行日志；公众号正文和结构化数据由 WeChatArticleAgent 生成，最终 Markdown、HTML 预览和图片包由后处理脚本稳定产出。
 
 ### 运行 mock 工程烟测
 
@@ -315,12 +356,29 @@ reports/YYYY-MM-DD/
 - `sources.json`：结构化来源列表，保留 title、url、source_type、published_at、retrieved_at、summary、confidence、tags。
 - `brief.json`：给公众号改写阶段使用的结构化摘要。
 
-### 公众号草稿输出
+### 公众号文章输出
 
 ```text
-articles/YYYY-MM-DD/
-└── wechat-article.md
+articles/YYYY-MM-DD-or-report-label/
+├── wechat-draft.md          # 公众号 Markdown 草稿
+├── final-wechat-article.md  # 最终公众号 Markdown 文章，用于人工检查或后续发布适配
+├── wechat-preview.html      # 本地 HTML 预览，用于浏览器审阅排版效果
+├── article.json             # 结构化文章数据，后续排版、配图、发布使用
+├── image-assets.json        # 文章图片清单，记录本地路径、来源、说明和状态
+├── images/                  # 文章本地图片，可由报告图片复制或图像模型生成
+└── metadata.json            # 本次生成的交接元数据
 ```
+
+说明：
+
+- `wechat-draft.md`：面向读者的公众号草稿，包含 `AI 前沿` 和 `浪里淘金`。
+- `final-wechat-article.md`：由 `article.json` 后处理生成的最终 Markdown 文章，包含摘要、正文栏目、参考来源和本地图片引用，是当前阶段交给人工检查/后续发布适配的主文件。
+- `wechat-preview.html`：由同一份结构化数据生成的轻量 HTML 预览，CSS 内嵌，图片使用本地 `./images/...` 相对路径，方便在浏览器里检查排版；它不是已发布到公众号后台的 HTML。
+- `article.json`：结构化文章对象，包含标题候选、摘要、sections、sources、risk_flags、`style_references`、`external_reference_accounts`、`source_attribution_note`、`image_assets` 和 `auto_publish_eligible=false`。
+- `image-assets.json`：文章图片清单，和 `article.json.image_assets` 保持一致。
+- `images/`：文章本地图片目录。图片可以从技术报告复制，也可以由图像模型生成；Markdown 和 HTML 只引用这里的相对路径。
+- `metadata.json`：记录输入报告、输出文件、生成 profile 和 `auto_publish=false`；必须包含 `output_final_article`、`output_html_preview`、`output_image_assets`、`output_images_dir` 和完整 `generated_files`，其中 `generated_files` 要列出顶层产物和实际保存的本地图片文件。
+- 当前阶段不自动发布；完全自动化发布将在 QA、排版、配图和发布接口稳定后接入。
 
 ## 报告质量标准
 
@@ -348,19 +406,34 @@ articles/YYYY-MM-DD/
 
 ## 图片规则
 
-专业技术报告可以不只是文字。
+当前阶段图片和排版流程保持最小可用：把图片保存好、能正确生成或复用、能在 Markdown、HTML 预览和 JSON 中正确引用即可。暂不做复杂的 Canva 式设计或自动发布后台适配。
 
-如果某个主题需要图片，TechnicalReportAgent 可以：
+技术报告侧可以生成或保存图片：
 
-- 生成图片，例如概念图、架构图、流程图。
-- 从网上搜寻并引用图片，例如产品截图、论文图、benchmark 图、官方架构图。
+- 输出目录：`reports/<label>/images/`。
+- 图片清单：`reports/<label>/image-assets.json`。
+- 生成提示词：只在使用图像生成时写入 `reports/<label>/image-prompts.json`。
+- 适合生成的图片：概念图、架构图、流程图、封面图。
+- 适合保存来源图片的情况：产品截图、论文图、benchmark 图、官方架构图。
+
+公众号文章侧要形成自包含图片包：
+
+- 输出目录：`articles/<label>/images/`。
+- 图片清单：`articles/<label>/image-assets.json`。
+- 优先复用并复制 `reports/<label>/images/` 中有用的图片。
+- 必要时再生成简单封面图或解释图。
+- `wechat-draft.md` 使用相对路径，例如 `![配图说明](./images/hero.png)`。
+- `final-wechat-article.md` 是当前阶段主交付文件，也必须只使用 `./images/...` 相对路径。
+- `wechat-preview.html` 是轻量本地 HTML 预览，也必须使用本地 `./images/...` 相对路径，不链接临时外部图片。
+- `article.json.image_assets` 必须和 `image-assets.json` 指向同一批本地图片。
 
 要求：
 
 - 图片应放在最能支撑正文的位置。
 - 外部图片必须保留来源链接和版权/使用语境。
-- 图片是辅助材料，不替代来源证据。
-- 如果图片不是必要的，可以跳过。
+- 生成图必须标注为概念图/解释图，不当成事实证据。
+- 不用图像模型伪造产品截图、官方 logo、benchmark 图或论文图。
+- 如果图片不是必要的，或者生成失败，可以跳过；正文仍应可用。
 
 ## 常见问题
 
@@ -423,7 +496,8 @@ python -u tests/test_technical_report_agent_run.py --timeout 540
 
 ```bash
 git status --short
-python -m py_compile scripts/install_hermes_profiles.py tests/test_technical_report_agent_run.py
+python -m py_compile scripts/install_hermes_profiles.py scripts/finalize_wechat_article.py tests/test_technical_report_agent_run.py tests/test_wechat_article_agent_run.py tests/test_finalize_wechat_article.py
+python tests/test_finalize_wechat_article.py
 python scripts/install_hermes_profiles.py --dry-run --configure-from-default
 ```
 

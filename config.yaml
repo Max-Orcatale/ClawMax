@@ -16,8 +16,13 @@ outputs:
   sources_filename: sources.json
   brief_filename: brief.json
   image_prompts_filename: image-prompts.json
+  image_assets_filename: image-assets.json
   images_dirname: images
   article_filename: wechat-draft.md
+  final_article_filename: final-wechat-article.md
+  html_preview_filename: wechat-preview.html
+  article_json_filename: article.json
+  metadata_filename: metadata.json
   review_notes_filename: review-notes.md
 
 agents:
@@ -35,6 +40,9 @@ agents:
     skills:
       - wechat-article-drafting
       - daily-ai-media-pipeline
+    include_images: true
+    max_images_per_article: 5
+    require_local_image_files: true
 
 image_gen:
   provider: openai
@@ -43,6 +51,9 @@ image_gen:
   default_size: 1536x1024
   output_subdir: images
   save_prompts: true
+  artifact_manifest: image-assets.json
+  min_required_generated_images: 0
+  max_images_per_article: 5
 
 research:
   tracked_companies:

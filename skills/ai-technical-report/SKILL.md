@@ -20,7 +20,9 @@ The report should prioritize accuracy, traceability, depth, and clear structure.
 
 A qualified report should read like an internal company intelligence memo written by a responsible technical analyst, not like a shallow news digest. Each selected item should explain the factual update, technical context, why it matters, who may be affected, what remains uncertain, and what the company or reader should watch next.
 
-The report may include optional images, such as a cover illustration, an architecture diagram, or a concept image. Images are supporting material, not evidence. Do not let image generation replace source-backed reporting.
+The report may include optional images, such as a cover illustration, an architecture diagram, a concept image, or saved source images. Images are supporting material, not evidence. Do not let image generation replace source-backed reporting.
+
+Keep image handling simple: save selected image files into the run directory, keep a small manifest, and use relative Markdown references. Avoid complex design systems, Canva-style composition, or HTML layout at this stage. The minimum acceptable visual workflow is: image files exist locally, Markdown links resolve, and downstream WeChat drafting can reuse them.
 
 Images may come from either generation or web-sourced materials, depending on the report need. If you use a web-sourced image, preserve its source URL, ownership/usage context, and caption it as an illustration or reference image rather than evidence. Place images where they support the adjacent text most naturally instead of collecting them all at the top or bottom.
 
@@ -81,6 +83,24 @@ Recommended image prompt record shape:
 }
 ```
 
+Recommended image asset manifest shape:
+
+```json
+{
+  "id": "hero",
+  "kind": "generated | web_source | user_provided",
+  "purpose": "cover | diagram | screenshot | paper_figure | benchmark_chart | concept | section_illustration",
+  "local_path": "reports/YYYY-MM-DD/images/hero.png",
+  "markdown_ref": "![封面图](./images/hero.png)",
+  "source_url": "",
+  "source_title": "",
+  "license_or_usage_note": "",
+  "caption": "string",
+  "status": "saved | planned | generated | skipped | failed",
+  "notes": "string"
+}
+```
+
 ## Outputs
 
 Default text and data outputs should be saved under:
@@ -95,8 +115,11 @@ Optional image-related outputs should be saved under:
 
 ```text
 reports/YYYY-MM-DD/image-prompts.json
-reports/YYYY-MM-DD/images/*.png
+reports/YYYY-MM-DD/image-assets.json
+reports/YYYY-MM-DD/images/*
 ```
+
+`image-assets.json` is the simple handoff manifest for all saved images, whether generated, web-sourced, or user-provided. Keep it small and practical: local path, Markdown reference, source/copyright context when applicable, caption, status, and notes.
 
 If generated images first land in `$HERMES_HOME/cache/images/`, copy or move the selected images into `reports/YYYY-MM-DD/images/` before linking them from the report.
 
@@ -133,16 +156,18 @@ If files already exist and may contain human edits, do not overwrite silently. P
    - `low`: social/community rumor, incomplete claim, or unverifiable summary.
 8. Generate the technical report in Chinese, while preserving API names, model names, paper titles, repositories, and commands in English.
 9. Put uncertain claims into a `待确认信息` or `风险、争议与待确认信息` section.
-10. Decide whether images are needed. Only generate images when they improve comprehension, presentation, or downstream reuse.
-11. If images are needed:
+10. Decide whether images are needed. Only add images when they improve comprehension, presentation, or downstream reuse. It is fine to skip images when they are not useful.
+11. If images are needed, use the minimum viable image workflow:
     - plan 1-3 images maximum for a daily report unless the user requests more;
-    - write image prompts into `image-prompts.json`;
-    - generate images with the configured image model, preferably `gpt-image-2-medium`;
-    - save final images under `reports/YYYY-MM-DD/images/`;
+    - prefer saving useful existing source images when they are factual visuals such as product screenshots, paper figures, benchmark charts, or official diagrams;
+    - generate images only for conceptual covers, simplified diagrams, or explanatory illustrations;
+    - write generation prompts into `image-prompts.json` when generation is used;
+    - save every selected image under `reports/YYYY-MM-DD/images/`;
+    - write every selected image into `image-assets.json`;
     - insert relative Markdown image references into `technical-report.md`;
-    - label conceptual images as illustrations, not evidence.
+    - label conceptual/generated images as illustrations, not evidence.
 12. Save report and structured source files.
-13. Verify that output paths, links, source references, and image references are present.
+13. Verify that output paths, links, source references, and image references are present and resolve locally.
 
 ## Report Structure
 
@@ -223,20 +248,24 @@ Depth expectations:
 - `risks`: list of uncertainty, credibility, or follow-up risks.
 - `ready_for_wechat_drafting`: boolean; set `true` only when the report is ready for the WeChat drafting stage.
 
-## Image Generation Rules
+## Image Rules
 
-- Image generation is optional, not mandatory.
-- Default model preference: `gpt-image-2-medium`.
+- Images are optional, not mandatory.
+- Keep the first implementation simple: save files, keep a manifest, and reference them correctly. Do not build a complex visual design pipeline yet.
+- Default generation model preference: `gpt-image-2-medium`.
 - Daily report default: 1-3 images maximum.
 - Useful image types:
   - cover image for the day's topic;
   - architecture or workflow diagram;
   - concept illustration for a difficult technical theme;
-  - section illustration for a major trend.
+  - section illustration for a major trend;
+  - saved official screenshots, paper figures, benchmark charts, or architecture diagrams when the source permits normal reference and the source URL is preserved.
+- Generate images only for conceptual/explanatory visuals. Do not generate factual evidence.
 - Avoid generating images for factual evidence, benchmark charts, logos, UI screenshots, or anything that should come from an original source.
 - Do not invent official product screenshots, company logos, benchmark numbers, or paper figures.
-- Avoid text-heavy images. Put exact labels and data in Markdown instead.
-- Save prompts and final image paths in `image-prompts.json` for audit and reruns.
+- Avoid text-heavy generated images. Put exact labels and data in Markdown instead.
+- Save prompts and final image paths in `image-prompts.json` for audit and reruns when generation is used.
+- Save all selected image files under `reports/YYYY-MM-DD/images/` and record them in `image-assets.json`.
 - If generation fails, keep the report usable and mark the image status as `failed` or `skipped`.
 
 ## Quality Rules
@@ -269,7 +298,8 @@ Depth expectations:
 - [ ] `sources.json` is valid JSON if generated.
 - [ ] `brief.json` is valid JSON if generated.
 - [ ] If images are generated, `image-prompts.json` is valid JSON.
-- [ ] If images are generated, final image files exist under `reports/YYYY-MM-DD/images/`.
+- [ ] If any images are used, `image-assets.json` is valid JSON.
+- [ ] If any images are used, final image files exist under `reports/YYYY-MM-DD/images/`.
 - [ ] Markdown image references use relative paths and resolve from `technical-report.md`.
 - [ ] No generated image is presented as factual evidence.
 - [ ] No secrets or private credentials appear in outputs.
