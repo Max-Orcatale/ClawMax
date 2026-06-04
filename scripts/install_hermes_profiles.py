@@ -210,39 +210,114 @@ def sync_profile_skills(profile_name: str, *, dry_run: bool) -> None:
     )
 
 
-def write_env_placeholders(profile_name: str, env_template: dict[str, str], *, dry_run: bool) -> None:
+def parse_env_file(path: Path) -> dict[str, str]:
+    """Parse a simple KEY=VALUE .env file without exposing values in logs."""
+    if not path.is_file():
+        return {}
+    values: dict[str, str] = {}
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if key:
+            values[key] = value
+    return values
+
+
+def env_template_from_manifest(manifest: dict[str, Any], spec: dict[str, Any]) -> dict[str, str]:
+    """Return declared local runtime env placeholders for a profile.
+
+    Real secret values must never be stored in profiles/profiles.yaml. The
+    manifest may declare only variable names and placeholder defaults. Per-profile
+    runtime_config.env can add or override runtime_defaults.env.
+    """
+    defaults = manifest.get("runtime_defaults", {})
+    if not isinstance(defaults, dict):
+        defaults = {}
+    env_template: dict[str, str] = {}
+    default_env = defaults.get("env", {})
+    if isinstance(default_env, dict):
+        env_template.update({str(k): str(v) for k, v in default_env.items()})
+
+    runtime_config = spec.get("runtime_config", {})
+    if isinstance(runtime_config, dict):
+        explicit_env = runtime_config.get("env", {})
+        if isinstance(explicit_env, dict):
+            env_template.update({str(k): str(v) for k, v in explicit_env.items()})
+    return env_template
+
+
+def sync_runtime_env(
+    profile_name: str,
+    manifest: dict[str, Any],
+    spec: dict[str, Any],
+    *,
+    dry_run: bool,
+    configure_from_default: bool,
+) -> None:
+    """Write declared local env vars into ~/.hermes/profiles/<profile>/.env.
+
+    When --configure-from-default is used, values are copied from the user's
+    local default ~/.hermes/.env for keys declared in profiles/profiles.yaml.
+    Missing values fall back to manifest placeholders so the profile advertises
+    exactly which local secrets still need to be filled. Values are never printed
+    and never written back to the repository.
+    """
+    env_template = env_template_from_manifest(manifest, spec)
     if not env_template:
         return
+
     env_path = runtime_profile_dir(profile_name) / ".env"
+    default_env_path = Path.home() / ".hermes" / ".env"
+    default_env = parse_env_file(default_env_path) if configure_from_default else {}
+    existing_env = parse_env_file(env_path)
 
-    existing = ""
-    if env_path.exists():
-        existing = env_path.read_text(encoding="utf-8")
+    desired: dict[str, str] = {}
+    copied_from_default: list[str] = []
+    placeholder_keys: list[str] = []
+    preserved_existing: list[str] = []
 
-    lines_to_add: list[str] = []
     for key, placeholder in env_template.items():
-        prefix = f"{key}="
-        if any(line.startswith(prefix) for line in existing.splitlines()):
-            continue
-        lines_to_add.append(f"{key}={placeholder}")
+        if configure_from_default and key in default_env and default_env[key]:
+            desired[key] = default_env[key]
+            copied_from_default.append(key)
+        elif key in existing_env and existing_env[key] and not is_placeholder(existing_env[key]):
+            desired[key] = existing_env[key]
+            preserved_existing.append(key)
+        else:
+            desired[key] = placeholder
+            placeholder_keys.append(key)
 
-    if not lines_to_add:
-        info(f"No .env placeholders needed for {profile_name}")
-        return
+    merged_env = dict(existing_env)
+    merged_env.update(desired)
 
     if dry_run:
-        info(f"DRY-RUN: append placeholders to {env_path}: {', '.join(line.split('=')[0] for line in lines_to_add)}")
+        actions: list[str] = []
+        if copied_from_default:
+            actions.append(f"copy from default .env: {', '.join(sorted(copied_from_default))}")
+        if preserved_existing:
+            actions.append(f"preserve existing: {', '.join(sorted(preserved_existing))}")
+        if placeholder_keys:
+            actions.append(f"write placeholders: {', '.join(sorted(placeholder_keys))}")
+        summary = "; ".join(actions) if actions else "no changes"
+        info(f"DRY-RUN: sync local runtime .env for {profile_name}: {env_path} ({summary})")
         return
 
     env_path.parent.mkdir(parents=True, exist_ok=True)
-    with env_path.open("a", encoding="utf-8") as handle:
-        if existing and not existing.endswith("\n"):
-            handle.write("\n")
-        if not existing:
-            handle.write("# Local secrets for this Hermes profile. Do not commit.\n")
-        for line in lines_to_add:
-            handle.write(line + "\n")
-    info(f"Updated local placeholder .env: {env_path}")
+    lines = ["# Local secrets for this Hermes profile. Do not commit."]
+    for key in sorted(merged_env):
+        lines.append(f"{key}={merged_env[key]}")
+    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    written_keys = sorted(desired)
+    info(f"Synced local runtime .env for {profile_name}: {env_path} ({', '.join(written_keys)})")
+    if placeholder_keys:
+        info(
+            f"WARNING: {profile_name} still has placeholder env values for: "
+            f"{', '.join(sorted(placeholder_keys))}. Fill them in locally at {env_path}."
+        )
 
 
 def inspect_profile_config(profile_name: str) -> str:
@@ -392,6 +467,13 @@ def install_profiles(
             model=model,
             base_url=base_url,
             api_key=api_key,
+        )
+        sync_runtime_env(
+            profile_name,
+            manifest,
+            spec,
+            dry_run=dry_run,
+            configure_from_default=configure_from_default,
         )
         sync_profile_skills(profile_name, dry_run=dry_run)
         copy_file(source, runtime_profile_dir(profile_name) / runtime_soul, dry_run=dry_run)

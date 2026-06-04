@@ -166,6 +166,8 @@ The pipeline is complete only if:
 - `metadata.json.output_html_preview` points to `articles/YYYY-MM-DD/wechat-preview.html`;
 - `metadata.json.generated_files` includes `wechat-preview.html` and every saved local image file;
 - `image-assets.json` exists and matches `article.json.image_assets`;
+- `image-assets.json` includes at least 5 saved local images, including at least 3 source-derived images with `source_url` and at least 1 real AI-generated bitmap image from `image_generate` / gpt-image with prompt/model metadata;
+- generated SVG placeholders and 5 similar dark-tech cover images are rejected;
 - uncertainty is visible;
 - the final output remains draft/review-only, with no auto-publishing;
 - the user can review Markdown or HTML locally before publication.
@@ -189,6 +191,7 @@ The pipeline is complete only if:
 - [ ] Final Markdown article exists and contains source links.
 - [ ] HTML preview exists and is review-only, not published.
 - [ ] `article.json.image_assets` matches `image-assets.json`.
+- [ ] Article bundle contains at least 5 saved local images, including at least 1 AI-generated image.
 - [ ] `metadata.json.output_html_preview` points to `articles/YYYY-MM-DD/wechat-preview.html`.
 - [ ] `metadata.json.generated_files` includes `wechat-preview.html` and every saved local image file.
 - [ ] Human review remains required before publication.

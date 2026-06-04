@@ -27,30 +27,42 @@ class FinalizeWeChatArticleBundleTest(unittest.TestCase):
             (report_dir / "images").mkdir(parents=True)
             article_dir.mkdir(parents=True)
 
-            (report_dir / "technical-report.md").write_text("# 技术报告\n", encoding="utf-8")
+            (report_dir / "technical-report.md").write_text("# 测试报告\n", encoding="utf-8")
             (report_dir / "sources.json").write_text("[]\n", encoding="utf-8")
             (report_dir / "brief.json").write_text("{}\n", encoding="utf-8")
-            (report_dir / "images" / "hero.png").write_bytes(b"fake-png")
-            (report_dir / "image-assets.json").write_text(
-                json.dumps(
-                    [
-                        {
-                            "id": "hero",
-                            "kind": "generated",
-                            "purpose": "cover",
-                            "local_path": f"reports/{report_label}/images/hero.png",
-                            "markdown_ref": "![封面图](./images/hero.png)",
-                            "caption": "AI 工作流概念图",
-                            "source_url": "",
-                            "source_title": "",
-                            "license_or_usage_note": "generated concept illustration",
-                            "status": "generated",
-                            "notes": "unit test fixture",
-                        }
-                    ],
-                    ensure_ascii=False,
+
+            image_assets = []
+            fixture_specs = [
+                ("source-1.png", "official_image", "section_illustration", "官方页面配图", "https://example.com/official-image.png", "", ""),
+                ("source-2.png", "webpage_screenshot", "section_illustration", "网页截图", "https://example.com/page", "", ""),
+                ("source-3.png", "paper_figure", "section_illustration", "论文图表", "https://example.com/paper.pdf", "", ""),
+                ("explainer-comic.png", "ai_generated", "section_illustration", "原创讲解漫画", "", "原创猫型讲解员和黑白小鼠学生解释 Agent 审计流程", "openai gpt-image-2-medium via image_generate"),
+                ("source-4.png", "github_screenshot", "section_illustration", "GitHub 项目截图", "https://github.com/example/project", "", ""),
+            ]
+            for index, (filename, kind, purpose, caption, source_url, prompt, notes) in enumerate(fixture_specs, start=1):
+                payload = f"fake-png-{index}".encode("utf-8")
+                (report_dir / "images" / filename).write_bytes(payload)
+                image_assets.append(
+                    {
+                        "id": Path(filename).stem,
+                        "kind": kind,
+                        "purpose": purpose,
+                        "local_path": f"reports/{report_label}/images/{filename}",
+                        "markdown_ref": f"![配图 {index}](./images/{filename})",
+                        "caption": caption,
+                        "source_url": source_url,
+                        "source_title": "Example Source" if source_url else "",
+                        "license_or_usage_note": "unit test source-derived placeholder" if source_url else "unit test AI-generated bitmap placeholder",
+                        "generation_prompt": prompt,
+                        "model": "gpt-image-2-medium" if prompt else "",
+                        "provider": "openai" if prompt else "",
+                        "tool": "image_generate" if prompt else "",
+                        "status": "saved",
+                        "notes": notes or "unit test fixture",
+                    }
                 )
-                + "\n",
+            (report_dir / "image-assets.json").write_text(
+                json.dumps(image_assets, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
 
@@ -133,17 +145,18 @@ class FinalizeWeChatArticleBundleTest(unittest.TestCase):
             final_article = repo_root / result["final_article_path"]
             image_manifest = repo_root / result["image_assets_path"]
             html_preview = repo_root / result["html_preview_path"]
-            copied_image = repo_root / "articles" / output_label / "images" / "hero.png"
+            copied_image = repo_root / "articles" / output_label / "images" / "source-1.png"
 
             self.assertTrue(final_article.is_file())
             self.assertTrue(image_manifest.is_file())
             self.assertTrue(html_preview.is_file())
             self.assertTrue(copied_image.is_file())
-            self.assertEqual(copied_image.read_bytes(), b"fake-png")
+            self.assertEqual(copied_image.read_bytes(), b"fake-png-1")
 
             final_text = final_article.read_text(encoding="utf-8")
             self.assertIn("# AI Agent 开始交作业了", final_text)
-            self.assertIn("![封面图](./images/hero.png)", final_text)
+            self.assertIn("![配图 1](./images/source-1.png)", final_text)
+            self.assertIn("![配图 5](./images/source-4.png)", final_text)
             self.assertIn("## 开场白", final_text)
             self.assertIn("## AI 前沿", final_text)
             self.assertIn("## 浪里淘金", final_text)
@@ -151,8 +164,10 @@ class FinalizeWeChatArticleBundleTest(unittest.TestCase):
             self.assertIn("https://example.com/project", final_text)
 
             manifest = json.loads(image_manifest.read_text(encoding="utf-8"))
-            self.assertEqual(manifest[0]["local_path"], f"articles/{output_label}/images/hero.png")
+            self.assertEqual(len(manifest), 5)
+            self.assertEqual(manifest[0]["local_path"], f"articles/{output_label}/images/source-1.png")
             self.assertEqual(manifest[0]["status"], "saved")
+            self.assertEqual(manifest[0]["kind"], "official_image")
 
             updated_article = json.loads((article_dir / "article.json").read_text(encoding="utf-8"))
             self.assertEqual(updated_article["image_assets"], manifest)
@@ -163,12 +178,14 @@ class FinalizeWeChatArticleBundleTest(unittest.TestCase):
             self.assertIn(f"articles/{output_label}/final-wechat-article.md", updated_metadata["generated_files"])
             self.assertIn(f"articles/{output_label}/wechat-preview.html", updated_metadata["generated_files"])
             self.assertIn(f"articles/{output_label}/image-assets.json", updated_metadata["generated_files"])
+            self.assertIn(f"articles/{output_label}/images/source-4.png", updated_metadata["generated_files"])
             self.assertEqual(updated_metadata["output_html_preview"], f"articles/{output_label}/wechat-preview.html")
 
             html_text = html_preview.read_text(encoding="utf-8")
             self.assertIn("<article", html_text)
             self.assertIn("AI Agent 开始交作业了", html_text)
-            self.assertIn("./images/hero.png", html_text)
+            self.assertIn("./images/source-1.png", html_text)
+            self.assertIn("./images/source-4.png", html_text)
 
 
 if __name__ == "__main__":

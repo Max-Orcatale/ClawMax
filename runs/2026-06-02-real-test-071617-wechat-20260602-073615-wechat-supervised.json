@@ -1,0 +1,10 @@
+{
+  "run_id": "2026-06-02-real-test-071617-wechat-20260602-073615-wechat-supervised",
+  "status": "completed_after_supervised_image_generate_injection",
+  "profile": "wechatarticleagent",
+  "source_report": "reports/2026-06-02-real-test-071617/technical-report.md",
+  "article_bundle": "articles/2026-06-02-real-test-071617-wechat-20260602-073615",
+  "note": "WeChatArticleAgent correctly failed the strict gate because it could not call real image_generate and did not use fallback. Supervising session generated one real gpt-image-2-medium PNG via Hermes image_generate and injected it; finalizer then passed strict image contract.",
+  "image_generate_asset": "articles/2026-06-02-real-test-071617-wechat-20260602-073615/images/agentic-harness-explainer-comic-gpt-image-2.png",
+  "completed_at": "2026-06-02T07:45:10+08:00"
+}

@@ -27,6 +27,7 @@
 3. 组织成微信文章风格。
 4. 保持 `AI 前沿` 与 `浪里淘金` 两个固定栏目。
 5. 输出公众号 Markdown 草稿、最终 Markdown 文章、轻量 HTML 预览、结构化 `article.json`、图片清单和元数据。
+6. 监管图片质量：优先使用信源截图/官方图/论文图/项目图；AI 图必须调用 `image_generate` 生成 PNG/JPG/WEBP，并做知识讲解漫画或原创吉祥物解释图，不允许用手写 SVG 占位。
 
 ## 输入
 
@@ -44,7 +45,7 @@
 - `articles/YYYY-MM-DD/wechat-preview.html`
 - `articles/YYYY-MM-DD/article.json`
 - `articles/YYYY-MM-DD/image-assets.json`
-- `articles/YYYY-MM-DD/images/`
+- `articles/YYYY-MM-DD/images/`（原则上不少于 5 张本地图片：至少 3 张信源图，至少 1 张真正通过 image_generate/gpt-image 生成的位图知识讲解图；禁止用手写 SVG 或 5 张模板封面图糊弄）
 - `articles/YYYY-MM-DD/metadata.json`
 
 ## 行为约束
@@ -116,3 +117,5 @@
 - 是否需要补充 `浪里淘金` 素材
 
 如果信息不足，再提出最少必要的澄清问题。
+
+监管补充：AI 生成图的 `tool` 字段必须严格等于 `image_generate`。`image_generate-compatible`、Pillow/local rendering fallback、手写 SVG、HTML/CSS/Canvas 截图或任何本地程序画出来的图，都不能算作 AI 生成图；如果无法调用 `image_generate`，必须失败并说明原因，不能用 fallback 冒充。

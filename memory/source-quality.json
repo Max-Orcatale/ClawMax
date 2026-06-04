@@ -1,1 +1,151 @@
-{}
+{
+  "arxiv.org": {
+    "host": "arxiv.org",
+    "seen_count": 3,
+    "confidence_counts": {
+      "high": 3
+    },
+    "last_seen_at": "2026-06-02T17:33:37+08:00",
+    "last_output_label": "2026-06-02-real-test-171928",
+    "last_run_id": "2026-06-02-real-test-171928",
+    "tags": [
+      "agents",
+      "benchmark",
+      "data-synthesis",
+      "ehr",
+      "embodied-ai",
+      "evaluation",
+      "llm-as-judge",
+      "long-horizon",
+      "medical-ai",
+      "multimodal",
+      "paper",
+      "reward-modeling",
+      "robotics",
+      "world-model"
+    ]
+  },
+  "blog.google": {
+    "host": "blog.google",
+    "seen_count": 2,
+    "confidence_counts": {
+      "high": 2
+    },
+    "last_seen_at": "2026-06-02T07:28:07+08:00",
+    "last_output_label": "2026-06-02-real-test-071617",
+    "last_run_id": "2026-06-02-real-test-071617",
+    "tags": [
+      "agents",
+      "demo",
+      "gemini",
+      "gemini-omni",
+      "google",
+      "multimodal"
+    ]
+  },
+  "github.com": {
+    "host": "github.com",
+    "seen_count": 7,
+    "confidence_counts": {
+      "high": 6,
+      "medium": 1
+    },
+    "last_seen_at": "2026-06-02T17:33:37+08:00",
+    "last_output_label": "2026-06-02-real-test-171928",
+    "last_run_id": "2026-06-02-real-test-171928",
+    "tags": [
+      "agents",
+      "browser-agent",
+      "claude-code",
+      "coding-agents",
+      "deepseek-v4",
+      "developer-tools",
+      "evaluation",
+      "github",
+      "kv-cache",
+      "langgraph",
+      "llm-infra",
+      "moe",
+      "reasoning-models",
+      "release",
+      "remote-graph",
+      "serving",
+      "skills",
+      "smolagents",
+      "speech",
+      "streaming",
+      "token-efficiency",
+      "tool-use",
+      "transformers",
+      "video-editing",
+      "vllm",
+      "web-search"
+    ]
+  },
+  "huggingface.co": {
+    "host": "huggingface.co",
+    "seen_count": 9,
+    "confidence_counts": {
+      "high": 6,
+      "medium": 3
+    },
+    "last_seen_at": "2026-06-02T17:33:37+08:00",
+    "last_output_label": "2026-06-02-real-test-171928",
+    "last_run_id": "2026-06-02-real-test-171928",
+    "tags": [
+      "agents",
+      "benchmark",
+      "code-generation",
+      "cosmos",
+      "developer-ecosystem",
+      "developer-tools",
+      "direct-corpus-interaction",
+      "edge-ai",
+      "embodied-ai",
+      "enterprise-ai",
+      "evaluation",
+      "governance",
+      "huggingface",
+      "ibm-research",
+      "jetbrains",
+      "local-ai",
+      "local-inference",
+      "moe",
+      "multimodal",
+      "nvidia",
+      "official",
+      "paper",
+      "physical-ai",
+      "product-demo",
+      "realtime-api",
+      "retrieval",
+      "robotics",
+      "search-agents",
+      "skills",
+      "speech-to-speech",
+      "workflow",
+      "world-model"
+    ]
+  },
+  "openai.com": {
+    "host": "openai.com",
+    "seen_count": 3,
+    "confidence_counts": {
+      "high": 3
+    },
+    "last_seen_at": "2026-06-02T07:28:07+08:00",
+    "last_output_label": "2026-06-02-real-test-071617",
+    "last_run_id": "2026-06-02-real-test-071617",
+    "tags": [
+      "agents",
+      "codex",
+      "enterprise-ai",
+      "evaluation",
+      "frontier-models",
+      "governance",
+      "regulation",
+      "safety",
+      "software-engineering"
+    ]
+  }
+}

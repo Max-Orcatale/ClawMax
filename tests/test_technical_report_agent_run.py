@@ -94,6 +94,8 @@ DEPTH_MARKERS = [
 ]
 
 MIN_REAL_REPORT_CHARS = 3500
+MIN_SOURCE_IMAGES = 3
+SOURCE_IMAGE_KINDS = {"official_image", "official_screenshot", "source_screenshot", "webpage_screenshot", "paper_figure", "github_screenshot", "product_screenshot", "og_image", "web_source", "source_image"}
 
 REQUIRED_SOURCE_KEYS = {
     "title",
@@ -230,17 +232,20 @@ def build_real_prompt(output_label: str) -> str:
 - skills: {TECHNICAL_REPORT_SKILL}, {PIPELINE_SKILL}
 - mode: real sources
 - output_dir: reports/{output_label}/
-- outputs: technical-report.md, sources.json, brief.json
+- outputs: technical-report.md, sources.json, brief.json, image-assets.json, images/*
 - source window: rolling recent window, not only today
-- source budget: 4-8 high-quality sources
-- include source types: official updates, papers/benchmarks, GitHub projects/releases, developer ecosystem signals
+- source budget: 8-12 high-quality sources, scope intentionally expanded for this run
+- include source types: official updates, papers/benchmarks, GitHub projects/releases, developer ecosystem signals, product/tool demos, visual-friendly sources
 - network timeout per request: 15 seconds
+- visual asset requirement: collect source-derived images during or immediately after source collection
 
 要求：
 - 自动检索真实资料。
 - 不使用 mock、模拟或 example.com。
 - 不要自动发布。
-- 如果图片不是必要的，请跳过图片。
+- 本轮必须抓取信源图片，不允许以“图片不是必要”为由跳过。
+- 必须在 reports/{output_label}/image-assets.json 记录 source-derived visual assets；优先官方图、网页/产品截图、论文图、GitHub/项目图、og:image。
+- 如果 agent 自己无法抓够图片，必须明确说明失败原因；不要用 AI 生成图或手写 SVG 冒充信源图。
 - 完成后只简要说明生成了哪些文件。
 """.strip()
 
@@ -398,11 +403,52 @@ def validate_report(path: Path, *, mock_smoke: bool) -> None:
     require(sum(1 for marker in DEPTH_MARKERS if marker in text) >= 4, "real-source report should show deeper analysis markers like 事实更新/技术背景/影响判断/后续观察")
 
 
+
+def run_source_image_collector(output_label: str) -> None:
+    collector = REPO_ROOT / "scripts" / "collect_source_images.py"
+    require(collector.is_file(), f"Missing source image collector: {collector}")
+    result = subprocess.run(
+        [sys.executable, str(collector), "--report-label", output_label, "--max-images", "10"],
+        cwd=REPO_ROOT,
+        env=build_subprocess_env(),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=180,
+    )
+    print(result.stdout)
+    require(result.returncode == 0, "source image collector failed:\n" + result.stdout)
+
+
+def validate_report_images(output_label: str) -> list[dict]:
+    output_dir = REPORTS_DIR / output_label
+    manifest_path = output_dir / "image-assets.json"
+    require(manifest_path.is_file(), f"Missing report image manifest: {manifest_path}")
+    assets = load_json(manifest_path)
+    require(isinstance(assets, list), "report image-assets.json should be a JSON array")
+    source_assets = []
+    for index, asset in enumerate(assets):
+        require(isinstance(asset, dict), f"image-assets.json item #{index} should be an object")
+        kind = str(asset.get("kind") or "").strip()
+        source_url = str(asset.get("source_url") or "").strip()
+        local_path = str(asset.get("local_path") or "").strip()
+        if kind in SOURCE_IMAGE_KINDS and source_url:
+            source_assets.append(asset)
+        require(local_path, f"image-assets.json item #{index} missing local_path")
+        image_path = REPO_ROOT / local_path if not Path(local_path).is_absolute() else Path(local_path)
+        require(image_path.is_file(), f"image asset file missing: {local_path}")
+    require(
+        len(source_assets) >= MIN_SOURCE_IMAGES,
+        f"report must include at least {MIN_SOURCE_IMAGES} source-derived images with source_url; got {len(source_assets)}",
+    )
+    return assets
+
 def validate_outputs(output_label: str, *, mock_smoke: bool) -> dict:
     output_dir = REPORTS_DIR / output_label
     report_path = output_dir / "technical-report.md"
     sources_path = output_dir / "sources.json"
     brief_path = output_dir / "brief.json"
+    image_assets_path = output_dir / "image-assets.json"
 
     require(output_dir.is_dir(), f"Output directory missing: {output_dir}")
     require(report_path.is_file(), f"Missing file: {report_path}")
@@ -412,6 +458,7 @@ def validate_outputs(output_label: str, *, mock_smoke: bool) -> dict:
     validate_report(report_path, mock_smoke=mock_smoke)
     validate_sources(sources_path, mock_smoke=mock_smoke)
     validate_brief(brief_path)
+    image_assets = [] if mock_smoke else validate_report_images(output_label)
     return {
         "output_dir": str(output_dir.relative_to(REPO_ROOT)),
         "report_path": str(report_path.relative_to(REPO_ROOT)),
@@ -419,6 +466,8 @@ def validate_outputs(output_label: str, *, mock_smoke: bool) -> dict:
         "brief_path": str(brief_path.relative_to(REPO_ROOT)),
         "brief": load_json(brief_path),
         "sources": load_json(sources_path),
+        "image_assets_path": str(image_assets_path.relative_to(REPO_ROOT)) if image_assets_path.exists() else "",
+        "image_assets": image_assets,
         "report_chars": len(read_text(report_path)),
     }
 
@@ -554,6 +603,10 @@ def main(argv: list[str]) -> int:
     exit_code = run_hermes(output_label=output_label, timeout_seconds=args.timeout, mock_smoke=args.mock_smoke)
     require(exit_code == 0, f"Hermes command failed with exit code {exit_code}")
 
+    if not args.mock_smoke:
+        print("\nCollecting/verifying report-side source images...\n")
+        run_source_image_collector(output_label)
+
     print("\nValidating generated files...\n")
     validation = validate_outputs(output_label, mock_smoke=args.mock_smoke)
     topics_updated = 0
@@ -580,10 +633,12 @@ def main(argv: list[str]) -> int:
                 "report": validation["report_path"],
                 "sources": validation["sources_path"],
                 "brief": validation["brief_path"],
+                "image_assets": validation.get("image_assets_path", ""),
             },
             "metrics": {
                 "report_chars": validation["report_chars"],
                 "sources_used": len(validation.get("sources") or []),
+                "source_images": len(validation.get("image_assets") or []),
                 "covered_topics_updated": topics_updated,
                 "source_hosts_updated": sources_updated,
             },

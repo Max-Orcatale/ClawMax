@@ -33,7 +33,8 @@ agents:
       - ai-technical-report
       - daily-ai-media-pipeline
     include_images: true
-    max_images_per_report: 3
+    min_source_images_per_report: 3
+    max_images_per_report: 8
   wechat_article:
     enabled: true
     profile: wechatarticleagent
@@ -41,8 +42,17 @@ agents:
       - wechat-article-drafting
       - daily-ai-media-pipeline
     include_images: true
+    min_images_per_article: 5
     max_images_per_article: 5
+    min_ai_generated_images_per_article: 1
+    min_source_derived_images_per_article: 3
+    max_cover_images_per_article: 1
+    max_generated_svg_images_per_article: 0
+    require_ai_generated_image: true
     require_local_image_files: true
+    require_source_derived_images: true
+    fail_if_image_generation_fails: true
+    fail_if_source_images_missing: true
 
 image_gen:
   provider: openai
@@ -52,8 +62,16 @@ image_gen:
   output_subdir: images
   save_prompts: true
   artifact_manifest: image-assets.json
-  min_required_generated_images: 0
+  min_required_generated_images: 1
+  min_source_derived_images_per_article: 3
+  min_images_per_article: 5
   max_images_per_article: 5
+  ai_image_required_suffixes:
+    - .png
+    - .jpg
+    - .jpeg
+    - .webp
+  forbid_generated_svg_placeholders: true
 
 research:
   tracked_companies:
@@ -78,3 +96,15 @@ content:
     - AI 前沿
     - 浪里淘金
   require_human_review: true
+
+publishing:
+  wechat_mp:
+    enabled: false
+    # draft_only means the project may create a WeChat official-account draft,
+    # but must not publish or mass-send automatically.
+    mode: draft_only
+    auto_publish: false
+    require_human_approval: true
+    default_author: "ClawMax"
+    digest_max_chars: 120
+    manifest_filename: wechat-publish.json

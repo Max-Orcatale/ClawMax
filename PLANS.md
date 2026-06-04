@@ -387,7 +387,7 @@ run-daily --date today --skip-search
 
 - 已验证 TechnicalReportAgent 的真实来源日报生成链路。
 - WeChatArticleAgent 已具备最终公众号文章包输出：`wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
-- 图片和预览链路已明确最小产物规范：保存到本地 `images/`，记录 `image-assets.json`，Markdown/HTML/JSON 使用相对路径引用。
+- 图片和预览链路已明确强制产物规范：公众号文章原则上不少于 5 张本地图片，其中至少 1 张 AI 生成图；保存到本地 `images/`，记录 `image-assets.json`，Markdown/HTML/JSON 使用相对路径引用。
 - 自动调度、复杂自动配图、自动发布仍未完成。
 - 后续规划应围绕“日报已通、最终文章包初通、调度未通、图片先最小可用”这一真实状态继续推进。
 

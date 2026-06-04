@@ -32,6 +32,40 @@ IMAGE_ASSETS_FILENAME = "image-assets.json"
 IMAGES_DIRNAME = "images"
 PROFILE_NAME = "wechatarticleagent"
 REQUIRED_SECTION_TYPES = {"intro", "frontier", "gold_rush", "references"}
+MIN_ARTICLE_IMAGES = 5
+MIN_AI_GENERATED_IMAGES = 1
+MIN_SOURCE_DERIVED_IMAGES = 3
+MAX_COVER_IMAGES = 1
+MAX_GENERATED_SVG_IMAGES = 0
+SOURCE_DERIVED_IMAGE_KINDS = {
+    "source_image",
+    "source_screenshot",
+    "official_image",
+    "official_screenshot",
+    "paper_figure",
+    "github_screenshot",
+    "product_screenshot",
+    "webpage_screenshot",
+    "og_image",
+    "web_source",
+}
+BITMAP_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+FORBIDDEN_PUBLIC_BODY_PHRASES = (
+    "技术报告里",
+    "这份技术报告",
+    "本次未",
+    "本文未",
+    "当前环境",
+    "style corpus",
+    "source_attribution_note",
+    "auto_publish",
+    "结构化数据",
+    "生成流程",
+    "ClawMax TechnicalReportAgent",
+    "ClawMax sources",
+    "ClawMax brief",
+)
+
 
 
 class FinalizeFailure(Exception):
@@ -112,6 +146,126 @@ def load_report_image_assets(*, report_dir: Path) -> list[dict[str, Any]]:
             if isinstance(assets, list):
                 return [item for item in assets if isinstance(item, dict)]
     return []
+
+
+def asset_kind(asset: dict[str, Any]) -> str:
+    return str(asset.get("kind") or asset.get("source_type") or asset.get("origin") or "").strip().lower()
+
+
+def is_source_derived_asset(asset: dict[str, Any]) -> bool:
+    kind = asset_kind(asset)
+    source_url = str(asset.get("source_url") or asset.get("url") or "").strip()
+    return bool(source_url) and (kind in SOURCE_DERIVED_IMAGE_KINDS or any(token in kind for token in ("source", "official", "screenshot", "figure", "og_image")))
+
+
+def is_ai_generated_asset(asset: dict[str, Any]) -> bool:
+    kind = asset_kind(asset)
+    status = str(asset.get("status") or "").lower()
+    prompt = str(asset.get("generation_prompt") or asset.get("prompt") or "").strip()
+    model = str(asset.get("model") or asset.get("provider") or "").lower()
+    return (
+        "generated" in kind
+        or "ai_generated" in kind
+        or "ai-generated" in kind
+        or "image_generate" in kind
+        or "generated" in status
+        or bool(prompt)
+        or "gpt-image" in model
+    )
+
+
+def is_generated_svg_asset(asset: dict[str, Any]) -> bool:
+    local_path = str(asset.get("local_path") or "").strip().lower()
+    return is_ai_generated_asset(asset) and local_path.endswith(".svg")
+
+
+def is_valid_ai_bitmap_asset(asset: dict[str, Any]) -> bool:
+    local_path = str(asset.get("local_path") or "").strip()
+    suffix = Path(local_path).suffix.lower()
+    prompt = str(asset.get("generation_prompt") or asset.get("prompt") or "").strip()
+    tool = str(asset.get("tool") or "").strip()
+    model = str(asset.get("model") or "").strip()
+    provider = str(asset.get("provider") or "").strip()
+    serialized = json.dumps(asset, ensure_ascii=False).lower()
+    return (
+        is_ai_generated_asset(asset)
+        and suffix in BITMAP_IMAGE_SUFFIXES
+        and bool(prompt)
+        and bool(model)
+        and bool(provider)
+        and tool == "image_generate"
+        and not any(marker in serialized for marker in ["fallback", "compatible", "pillow", "local bitmap rendering"])
+    )
+
+
+def normalize_article_image_assets(*, article: dict[str, Any], article_dir: Path, repo_root: Path, max_images: int) -> list[dict[str, Any]]:
+    image_dir = article_dir / IMAGES_DIRNAME
+    image_dir.mkdir(parents=True, exist_ok=True)
+    normalized: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
+    for index, asset in enumerate(as_list(article.get("image_assets")), start=1):
+        if not isinstance(asset, dict) or len(normalized) >= max_images:
+            continue
+        local_path_value = str(asset.get("local_path") or asset.get("path") or "").strip()
+        if not local_path_value:
+            continue
+        raw_path = Path(local_path_value)
+        candidates = [raw_path] if raw_path.is_absolute() else [repo_root / raw_path, article_dir / raw_path]
+        source_path = next((candidate for candidate in candidates if candidate.is_file()), None)
+        if source_path is None:
+            normalized.append({**asset, "status": "missing_source", "notes": "Article image asset file was not found while finalizing article bundle."})
+            continue
+        destination = image_dir / source_path.name
+        if source_path.resolve() != destination.resolve():
+            destination = image_dir / source_path.name
+            if destination.exists():
+                destination = image_dir / f"{source_path.stem}-{index}{source_path.suffix or '.png'}"
+            shutil.copy2(source_path, destination)
+        rel = rel_path(destination, repo_root=repo_root)
+        if rel in seen_paths:
+            continue
+        seen_paths.add(rel)
+        caption = str(asset.get("caption") or asset.get("alt") or asset.get("purpose") or f"配图 {index}")
+        markdown_ref = normalize_markdown_ref(str(asset.get("markdown_ref") or ""), destination.name, caption)
+        normalized.append({
+            **asset,
+            "local_path": rel,
+            "markdown_ref": markdown_ref,
+            "caption": caption,
+            "status": "saved",
+            "kind": asset.get("kind") or ("generated" if is_ai_generated_asset(asset) else "article_asset"),
+        })
+    return normalized
+
+
+def merge_image_assets(*, article_assets: list[dict[str, Any]], report_assets: list[dict[str, Any]], max_images: int) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
+    for asset in article_assets + report_assets:
+        if len(merged) >= max_images:
+            break
+        if not isinstance(asset, dict):
+            continue
+        local_path = str(asset.get("local_path") or "")
+        if local_path in seen_paths:
+            continue
+        seen_paths.add(local_path)
+        merged.append(asset)
+    return merged
+
+
+def insert_image_refs_after_sections(text: str, image_assets: list[dict[str, Any]]) -> str:
+    saved_refs = [str(asset.get("markdown_ref") or "").strip() for asset in image_assets if isinstance(asset, dict) and asset.get("status") == "saved" and str(asset.get("markdown_ref") or "").strip()]
+    missing_refs = [ref for ref in saved_refs if ref not in text]
+    if not missing_refs:
+        return text
+    gallery = "\n".join(missing_refs)
+    return text.rstrip() + "\n\n## 配图预览\n\n" + gallery + "\n"
+
+
+def validate_public_body_text(text: str, *, label: str) -> None:
+    for phrase in FORBIDDEN_PUBLIC_BODY_PHRASES:
+        require(phrase not in text, f"{label} contains forbidden internal/AI-process phrase: {phrase}")
 
 
 def copy_report_images(
@@ -215,7 +369,8 @@ def build_final_markdown(article: dict[str, Any], image_assets: list[dict[str, A
             continue
         parts.extend([f"## {heading}", "", content, ""])
 
-    return "\n".join(parts).rstrip() + "\n"
+    final_text = "\n".join(parts).rstrip() + "\n"
+    return insert_image_refs_after_sections(final_text, image_assets)
 
 
 def inline_markdown_to_html(text: str) -> str:
@@ -306,6 +461,28 @@ def build_html_preview(article: dict[str, Any], image_assets: list[dict[str, Any
             )
         )
 
+    existing_html = "\n".join(body_parts)
+    gallery_refs = []
+    for asset in image_assets:
+        if not isinstance(asset, dict) or asset.get("status") != "saved":
+            continue
+        markdown_ref = str(asset.get("markdown_ref") or "").strip()
+        local_path = str(asset.get("local_path") or "").strip()
+        filename = Path(local_path).name if local_path else ""
+        if markdown_ref and filename and filename not in existing_html:
+            gallery_refs.append(markdown_ref)
+    if gallery_refs:
+        body_parts.append(
+            "\n".join(
+                [
+                    '<section class="wechat-preview-section wechat-preview-gallery">',
+                    "<h2>配图预览</h2>",
+                    markdown_block_to_html("\n".join(gallery_refs)),
+                    "</section>",
+                ]
+            )
+        )
+
     body_html = "\n".join(body_parts)
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -374,12 +551,26 @@ def validate_final_bundle(
     require((article_dir / IMAGES_DIRNAME).is_dir(), f"Missing images directory: {article_dir / IMAGES_DIRNAME}")
 
     saved_assets = [asset for asset in image_assets if isinstance(asset, dict) and asset.get("status") == "saved"]
+    source_assets = [asset for asset in saved_assets if is_source_derived_asset(asset)]
+    ai_bitmap_assets = [asset for asset in saved_assets if is_valid_ai_bitmap_asset(asset)]
+    generated_svg_assets = [asset for asset in saved_assets if is_generated_svg_asset(asset)]
+    cover_assets = [asset for asset in saved_assets if str(asset.get("purpose") or "").lower() == "cover"]
+    require(len(saved_assets) >= MIN_ARTICLE_IMAGES, f"final article bundle must include at least {MIN_ARTICLE_IMAGES} saved images")
+    require(len(source_assets) >= MIN_SOURCE_DERIVED_IMAGES, f"final article bundle must include at least {MIN_SOURCE_DERIVED_IMAGES} source-derived images with non-empty source_url")
+    require(len(ai_bitmap_assets) >= MIN_AI_GENERATED_IMAGES, f"final article bundle must include at least {MIN_AI_GENERATED_IMAGES} real AI-generated bitmap image created via image_generate/gpt-image with non-empty prompt")
+    require(len(generated_svg_assets) <= MAX_GENERATED_SVG_IMAGES, "generated SVG placeholder images are not allowed; use source-derived images or real image_generate bitmap output")
+    require(len(cover_assets) <= MAX_COVER_IMAGES, f"final article bundle must include at most {MAX_COVER_IMAGES} cover-like image")
+    validate_public_body_text(text, label="final article")
+    validate_public_body_text(html_text, label="HTML preview")
     for asset in saved_assets:
         local_path = str(asset.get("local_path") or "")
         require(local_path.startswith(f"articles/{article_dir.name}/{IMAGES_DIRNAME}/"), f"image asset local_path must be in article images dir: {local_path}")
         require((article_dir.parent.parent / local_path).is_file(), f"image asset file does not exist: {local_path}")
         markdown_ref = str(asset.get("markdown_ref") or "")
         require(markdown_ref.startswith("![") and f"./{IMAGES_DIRNAME}/" in markdown_ref, f"image asset markdown_ref must be relative: {markdown_ref}")
+        rel_ref = re.search(r"\(([^)]+)\)", markdown_ref)
+        if rel_ref:
+            require(rel_ref.group(1) in text or rel_ref.group(1) in html_text, f"image asset is not referenced by final Markdown or HTML: {rel_ref.group(1)}")
 
     require(article.get("image_assets") == image_assets, "article.json image_assets must match image-assets.json")
 
@@ -410,7 +601,9 @@ def finalize_wechat_article_bundle(
     require(isinstance(article, dict), "article.json must be an object")
     validate_article_contract(article)
 
-    image_assets = copy_report_images(report_dir=report_dir, article_dir=article_dir, repo_root=repo_root, max_images=max_images)
+    article_image_assets = normalize_article_image_assets(article=article, article_dir=article_dir, repo_root=repo_root, max_images=max_images)
+    report_image_assets = copy_report_images(report_dir=report_dir, article_dir=article_dir, repo_root=repo_root, max_images=max_images)
+    image_assets = merge_image_assets(article_assets=article_image_assets, report_assets=report_image_assets, max_images=max_images)
     article["image_assets"] = image_assets
     article["final_article"] = rel_path(final_article_path, repo_root=repo_root)
     article["updated_at"] = now_iso()

@@ -43,6 +43,39 @@ HTML_PREVIEW_FILENAME = "wechat-preview.html"
 IMAGE_ASSETS_FILENAME = "image-assets.json"
 IMAGES_DIRNAME = "images"
 STYLE_REFERENCE_ACCOUNTS = ("Kyro AI Tech", "说说说来话长", "数字生命卡兹克", "逛逛 Github")
+MIN_ARTICLE_IMAGES = 5
+MIN_AI_GENERATED_IMAGES = 1
+MIN_SOURCE_DERIVED_IMAGES = 3
+MAX_COVER_IMAGES = 1
+MAX_GENERATED_SVG_IMAGES = 0
+SOURCE_DERIVED_IMAGE_KINDS = {
+    "source_image",
+    "source_screenshot",
+    "official_image",
+    "official_screenshot",
+    "paper_figure",
+    "github_screenshot",
+    "product_screenshot",
+    "webpage_screenshot",
+    "og_image",
+    "web_source",
+}
+BITMAP_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+FORBIDDEN_PUBLIC_BODY_PHRASES = (
+    "技术报告里",
+    "这份技术报告",
+    "本次未",
+    "本文未",
+    "当前环境",
+    "style corpus",
+    "source_attribution_note",
+    "auto_publish",
+    "结构化数据",
+    "生成流程",
+    "ClawMax TechnicalReportAgent",
+    "ClawMax sources",
+    "ClawMax brief",
+)
 
 REQUIRED_REPORT_FILES = ("technical-report.md", "sources.json", "brief.json")
 REQUIRED_DRAFT_MARKERS = (
@@ -69,7 +102,7 @@ REQUIRED_ARTICLE_KEYS = {
     "image_assets",
     "auto_publish_eligible",
 }
-REQUIRED_SECTION_TYPES = {"intro", "frontier", "gold_rush"}
+REQUIRED_SECTION_TYPES = {"intro", "frontier", "gold_rush", "references"}
 PROXY_ENV_KEYS = (
     "HTTP_PROXY",
     "HTTPS_PROXY",
@@ -230,6 +263,9 @@ def build_prompt(report_label: str, output_label: str, input_info: dict) -> str:
    - 公众号 Markdown 草稿。
    - 必须包含：# 标题、## 开场白、## AI 前沿、## 浪里淘金、## 今天值得想一想、## 结尾互动、## 参考与信息来源。
    - 风格不要像技术报告摘要。要更像一个懂技术的人在公众号里讲“这事为什么有意思”：有判断、有节奏、有具体例子，少用报告腔。
+   - 专业论文不要堆太多，除非能转成生活、工作、产品体验、开发者工具或可尝试项目的具体场景。
+   - 开头和结尾必须像正常公众号正文，禁止出现“这份技术报告 / 本文未 / 当前环境 / 结构化数据 / 生成流程 / style corpus unavailable”等内部说明或 AI 口吻。
+   - 如果技术报告素材太专业，你要优先从 brief/sources 里提炼生活化角度、工具玩法和读者利益点，而不是照搬论文综述。
    - 用户提到的 `Kyro AI Tech`、`说说说来话长`、`数字生命卡兹克`、`逛逛 Github` 是待采样参考账号，不是可直接冒充已读样本的风格标签。
    - 只有在真实读取到这些公众号文章正文或用户提供导出样本后，才可以把它们写入 style_references；如果只搜到标题/摘要或遇到验证码/反爬，必须在 source_attribution_note 说明 style corpus unavailable。
    - 事实应来自技术报告、sources.json、brief.json；如果补充新素材，必须保留链接和不确定性说明。
@@ -240,14 +276,21 @@ def build_prompt(report_label: str, output_label: str, input_info: dict) -> str:
    - 必须是合法 JSON object。
    - 必须包含这些字段：date, title, title_candidates, digest, sections, source_report, sources, risk_flags, style_references, external_reference_accounts, source_attribution_note, auto_publish_eligible。
    - sections 必须是数组，每项包含 heading, type, content_md。
-   - sections 至少包含 type=intro、frontier、gold_rush。
+   - sections 至少包含 type=intro、frontier、gold_rush、references。
+   - `参考与信息来源` 对应 section 的 type 必须是 `references`，不要写成 `sources`。
    - title_candidates 必须是数组。
    - sources 必须是数组。
    - risk_flags 必须是数组。
    - style_references 必须是数组；只记录真实读取过并实际用于文风参考的样本账号/文章。当前环境如果无法读取公众号正文，可以为空数组。
    - external_reference_accounts 必须是数组；如果本次没有实际使用这些公众号的信息来源，只写空数组，不要假装引用。
    - source_attribution_note 必须是字符串，说明文末 `参考与信息来源` 如何注明来源。
-   - image_assets 必须是数组；可先为空，Python 后处理会把报告图片复制到文章包并同步更新。
+   - image_assets 必须是数组，且不少于 5 张本地图片；但不能用 5 张手写 SVG/暗色模板图糊弄。
+   - 图片结构硬要求：source-derived images 至少 3 张，优先来自 source URL 的官方图、网页截图、论文图、GitHub/产品截图或 og:image；每张必须有非空 source_url。
+   - AI 生成图至少 1 张，必须是真正调用 Hermes `image_generate` 工具得到的 PNG/JPG/WEBP 位图；`tool` 字段必须严格等于 `image_generate`，必须有非空 generation_prompt、model、provider，不允许用 agent 手写 SVG、Pillow fallback、compatible bitmap 或本地渲染冒充。
+   - cover-like 图片最多 1 张；禁止 generated SVG placeholder。
+   - 至少 1 张 AI 图应是知识讲解漫画/原创吉祥物解释图，而不是泛化 dark tech cover。可借鉴“机器猫、黑白鼠”式讲解效果，但不得直接使用受版权保护角色；使用原创猫型/鼠型/机器人讲解员。
+   - 你必须实际生成、抓取或准备这些图片文件，保存到 articles/{output_label}/images/，并在 image_assets 中记录 local_path、markdown_ref、caption、kind、status、generation_prompt/source_url/model/provider/tool 等字段。
+   - Markdown 正文必须引用这些图片，使用 `./images/...` 相对路径。
    - auto_publish_eligible 现在必须是 false；本阶段只做草稿和结构化数据，不自动发布。
 
 3. articles/{output_label}/metadata.json
@@ -300,6 +343,11 @@ def run_hermes(command: list[str], *, timeout_seconds: int) -> int:
         raise
 
 
+def validate_public_body_text(text: str, *, label: str) -> None:
+    for phrase in FORBIDDEN_PUBLIC_BODY_PHRASES:
+        require(phrase not in text, f"{label} contains forbidden internal/AI-process phrase: {phrase}")
+
+
 def validate_draft(path: Path) -> str:
     require(path.is_file(), f"Missing file: {path}")
     text = read_text(path)
@@ -307,6 +355,8 @@ def validate_draft(path: Path) -> str:
     for marker in REQUIRED_DRAFT_MARKERS:
         require(marker in text, f"wechat-draft.md missing required marker: {marker}")
     require("http://" in text or "https://" in text, "wechat-draft.md should preserve at least one source/project link")
+    require(f"./{IMAGES_DIRNAME}/" in text, "wechat-draft.md must include local image references")
+    validate_public_body_text(text, label="wechat-draft.md")
     return text
 
 
@@ -366,6 +416,8 @@ def validate_final_article(path: Path) -> str:
     for marker in REQUIRED_DRAFT_MARKERS:
         require(marker in text, f"final-wechat-article.md missing required marker: {marker}")
     require("http://" in text or "https://" in text, "final-wechat-article.md should preserve at least one source/project link")
+    require(f"./{IMAGES_DIRNAME}/" in text, "final-wechat-article.md must include local image references")
+    validate_public_body_text(text, label="final-wechat-article.md")
     return text
 
 
@@ -376,6 +428,8 @@ def validate_html_preview(path: Path) -> str:
     require("wechat-preview" in text, "wechat-preview.html should include preview-specific styling or class names")
     require("AI 前沿" in text and "浪里淘金" in text, "wechat-preview.html should preserve required article sections")
     require("http://" in text or "https://" in text, "wechat-preview.html should preserve at least one source/project link")
+    require(f"./{IMAGES_DIRNAME}/" in text, "wechat-preview.html must include local image references")
+    validate_public_body_text(text, label="wechat-preview.html")
     return text
 
 
@@ -383,17 +437,57 @@ def validate_image_assets(path: Path, *, output_label: str) -> list:
     require(path.is_file(), f"Missing file: {path}")
     data = load_json(path)
     require(isinstance(data, list), "image-assets.json must be an array")
+    require(len(data) >= MIN_ARTICLE_IMAGES, f"image-assets.json must contain at least {MIN_ARTICLE_IMAGES} images")
     images_dir = path.parent / IMAGES_DIRNAME
     require(images_dir.is_dir(), f"Missing images directory: {images_dir}")
+    ai_bitmap_count = 0
+    source_derived_count = 0
+    generated_svg_count = 0
+    cover_count = 0
+    saved_count = 0
     for index, asset in enumerate(data):
         require(isinstance(asset, dict), f"image-assets.json[{index}] must be an object")
         local_path = str(asset.get("local_path") or "")
         status = str(asset.get("status") or "")
+        kind = str(asset.get("kind") or asset.get("source_type") or asset.get("origin") or "").lower()
+        prompt = str(asset.get("generation_prompt") or asset.get("prompt") or "").strip()
+        source_url = str(asset.get("source_url") or asset.get("url") or "").strip()
+        tool = str(asset.get("tool") or "").strip()
+        model = str(asset.get("model") or "").strip()
+        provider = str(asset.get("provider") or "").strip()
+        model_blob = " ".join(str(asset.get(key) or "") for key in ("model", "provider", "tool", "notes")).lower()
+        suffix = Path(local_path).suffix.lower()
+        serialized_asset = json.dumps(asset, ensure_ascii=False).lower()
+        is_generated = "generated" in kind or bool(prompt) or "gpt-image" in model_blob or "image_generate" in model_blob
+        is_source_derived = bool(source_url) and (kind in SOURCE_DERIVED_IMAGE_KINDS or any(token in kind for token in ("source", "official", "screenshot", "figure", "og_image")))
+        is_ai_bitmap = (
+            is_generated
+            and suffix in BITMAP_IMAGE_SUFFIXES
+            and bool(prompt)
+            and bool(model)
+            and bool(provider)
+            and tool == "image_generate"
+            and not any(marker in serialized_asset for marker in ["fallback", "compatible", "pillow", "local bitmap rendering"])
+        )
+        if str(asset.get("purpose") or "").lower() == "cover":
+            cover_count += 1
+        if is_generated and suffix == ".svg":
+            generated_svg_count += 1
+        if is_source_derived:
+            source_derived_count += 1
+        if is_ai_bitmap:
+            ai_bitmap_count += 1
         if status == "saved":
+            saved_count += 1
             require(local_path.startswith(f"articles/{output_label}/{IMAGES_DIRNAME}/"), f"image-assets.json[{index}].local_path must point inside article images dir")
             require((REPO_ROOT / local_path).is_file(), f"image-assets.json[{index}] file missing: {local_path}")
             markdown_ref = str(asset.get("markdown_ref") or "")
             require(markdown_ref.startswith("![") and f"./{IMAGES_DIRNAME}/" in markdown_ref, f"image-assets.json[{index}].markdown_ref must use relative images path")
+    require(saved_count >= MIN_ARTICLE_IMAGES, f"article bundle must include at least {MIN_ARTICLE_IMAGES} saved images")
+    require(source_derived_count >= MIN_SOURCE_DERIVED_IMAGES, f"article bundle must include at least {MIN_SOURCE_DERIVED_IMAGES} source-derived images with source_url")
+    require(ai_bitmap_count >= MIN_AI_GENERATED_IMAGES, f"article bundle must include at least {MIN_AI_GENERATED_IMAGES} real AI-generated bitmap image with tool exactly image_generate; fallback/compatible/Pillow output is not accepted")
+    require(generated_svg_count <= MAX_GENERATED_SVG_IMAGES, "generated SVG placeholder images are not allowed")
+    require(cover_count <= MAX_COVER_IMAGES, f"article bundle must include at most {MAX_COVER_IMAGES} cover-like image")
     return data
 
 
@@ -458,6 +552,14 @@ def main(argv: list[str]) -> int:
     start_time = dt.datetime.now(dt.timezone.utc)
 
     input_info = validate_report_input(report_label)
+    # Supervision gate: try to prepare source-derived visual assets before the article agent runs.
+    # The finalizer still enforces the hard contract; this step gives the agent real source images
+    # so it cannot satisfy the 5-image quota with generated placeholders.
+    collector = REPO_ROOT / "scripts" / "collect_source_images.py"
+    report_manifest = REPORTS_DIR / report_label / IMAGE_ASSETS_FILENAME
+    if collector.is_file() and not report_manifest.is_file():
+        print("Collecting source-derived images before running WeChatArticleAgent...")
+        subprocess.run([sys.executable, str(collector), "--report-label", report_label, "--max-images", "8"], cwd=REPO_ROOT, env=build_subprocess_env(), check=False)
     output_dir = ARTICLES_DIR / output_label
     command = build_command(report_label, output_label, input_info)
 

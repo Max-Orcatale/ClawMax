@@ -20,7 +20,7 @@ Treat the professional report as raw intelligence, not prose to lightly rewrite.
 
 Current implementation should generate draft and structured data only. Do not publish automatically from this skill alone. The long-term ClawMax product goal is still full automation: generate, structure, QA, format, add visuals, and publish after reliable automated gates exist.
 
-Image handling and layout should stay minimal but useful: preserve usable report images, generate only necessary explanatory/cover images, save final files locally, reference them correctly from the Markdown and `article.json`, and generate a lightweight local HTML preview for visual review. Do not build a complex Canva-style design layer or attempt WeChat backend publishing unless the user explicitly asks.
+Image handling and layout is mandatory and must be supervised, not gamed. Every public-account article should include at least 5 local images, but the quota cannot be filled with generic generated SVGs or dark tech cover templates. The required mix is: at least 3 source-derived images (official image, webpage/product screenshot, paper figure, GitHub/project screenshot, or og:image) with non-empty `source_url`; at least 1 real AI-generated bitmap image (`.png/.jpg/.jpeg/.webp`) produced through Hermes `image_generate` with a saved prompt; at most 1 cover-like image; 0 generated SVG placeholders. Save final files locally, reference them correctly from Markdown/HTML/`article.json`, and generate a lightweight local HTML preview for visual review. Do not build a complex Canva-style design layer or attempt WeChat backend publishing unless the user explicitly asks.
 
 For ClawMax-specific style and attribution details, see `references/clawmax-wechat-style-attribution.md`.
 
@@ -113,12 +113,18 @@ If a draft may contain human edits, do not overwrite it silently. Integration sc
 7. Write `浪里淘金` using attractive AI projects, tools, cases, or developer玩法. If adding new discoveries, keep links and mark uncertainty.
 8. Add a short reflection section, e.g. `今天值得想一想`.
 9. Add a closing interaction question.
-10. Prepare article images with the minimum viable image workflow:
-    - reuse relevant report images from `reports/<label>/images/` when available;
+10. Prepare article images with the mandatory supervised article image workflow:
+    - first run or rely on `scripts/collect_source_images.py --report-label <label>` when the report has no source image manifest;
+    - include at least 5 saved local images in `articles/<label>/images/`;
+    - include at least 3 source-derived images with non-empty `source_url`; prefer official images, webpage/product screenshots, paper figures, GitHub/project screenshots, or `og:image` captured from the original source pages;
+    - include at least 1 real AI-generated bitmap image (`.png/.jpg/.jpeg/.webp`) created via Hermes `image_generate`, with non-empty `generation_prompt`, `model`, `provider`, and `tool` metadata;
+    - the required AI image should normally be a knowledge-explainer comic or original mascot explanation graphic, not a generic cover. It may borrow the explainer feel of “机器猫、黑白鼠” style knowledge cartoons, but must use original non-copyrighted characters such as a ClawMax cat-like robot teacher and a black-white lab mouse student;
+    - cover-like images are capped at 1;
+    - generated SVG placeholders are forbidden; hand-written SVGs do not count as the AI-generated image requirement;
     - copy selected images into `articles/<label>/images/` so the article bundle is self-contained;
-    - generate a simple cover or section illustration only when it clearly improves the article;
     - record all selected/generated images in `articles/<label>/image-assets.json`;
-    - insert relative Markdown image references at the most useful point in `wechat-draft.md` or `final-wechat-article.md`.
+    - insert relative Markdown image references at useful points in `wechat-draft.md` and `final-wechat-article.md`;
+    - if AI image generation fails, the article bundle should fail rather than silently passing with no generated image.
 11. Add `## 参考与信息来源` at the end of `wechat-draft.md` and ensure it also appears in `final-wechat-article.md`.
 12. Generate structured `article.json` alongside the Markdown draft so later stages can render, QA, add visuals, and publish without parsing prose.
 13. Generate or run a small finalization step that assembles `final-wechat-article.md` from `article.json`, synchronizes `article.json.image_assets` with `image-assets.json`, creates `images/`, and updates `metadata.json` with `output_final_article`, `output_html_preview`, and `output_image_assets`.
@@ -170,23 +176,28 @@ Contract rules:
 - `final-wechat-article.md` is assembled from `article.json`; it must include title, digest, required sections, source links, and relative local image references.
 - `wechat-preview.html` is generated from the same structured data for visual review. It should use local `./images/...` references and self-contained CSS. It is not a published WeChat article and should not include publishing tokens or backend-specific state.
 - `metadata.json.generated_files` must list all generated top-level files, including `wechat-preview.html`, plus every saved local image file; `metadata.json` must include `output_final_article`, `output_html_preview`, `output_image_assets`, and `output_images_dir`.
+- The bundle must contain at least 5 saved local images, at least 3 source-derived images with non-empty `source_url`, and at least 1 real AI-generated bitmap image created via `image_generate` with a non-empty prompt. Empty `image-assets.json`, source-less image packs, generated SVG placeholders, or 5 similar dark-tech cover images are failed bundles, not warnings.
 - `article.json.image_assets` must exactly match `image-assets.json` after finalization.
 - `auto_publish_eligible` and `metadata.auto_publish` remain `false` until separate automated QA/publishing gates exist.
 
 ## Image Asset Rules
 
-Keep image handling boring and reliable:
+Keep image handling boring, reliable, and mandatory:
 
 - Use `articles/<label>/images/` as the article-local image directory.
 - Use `articles/<label>/image-assets.json` as the article-local image manifest.
-- Prefer copying useful report images from `reports/<label>/images/` rather than regenerating them.
-- Generate at most a simple cover or explanatory illustration when no suitable image exists and the article would benefit from one.
+- Each article should include at least 5 saved local images.
+- At least 3 images must be source-derived and preserve `source_url`, `source_title`, and usage/copyright notes.
+- At least 1 image must be a real AI-generated bitmap (`.png/.jpg/.jpeg/.webp`) from `image_generate` with `generation_prompt`, `model`, `provider`, and `tool` recorded.
+- Prefer copying useful report/source images from `reports/<label>/images/` for most images rather than regenerating everything.
+- Generate one high-quality knowledge-explainer comic/original mascot illustration when no suitable generated image exists; do not generate five generic cover-like diagrams.
+- Do not use hand-written SVG as a substitute for image generation.
 - Do not invent product UI, official screenshots, benchmark charts, logos, or paper figures with an image model. Save those from original sources only when appropriate.
 - Markdown references in `wechat-draft.md` and `final-wechat-article.md` must be relative to the article file, e.g. `![配图说明](./images/hero.png)`.
 - `article.json.image_assets` and `image-assets.json` must refer to the same local files.
 - If an image comes from the web, preserve `source_url`, `source_title`, and a short usage/copyright note.
-- If image generation fails, keep the article usable without it and mark the asset as `failed` or omit it.
-- Do not block article generation merely because optional images failed.
+- If the required AI-generated image fails, the article bundle must fail or be rerun; do not silently pass a no-image article.
+- Optional extra images may be skipped, but the final bundle still must satisfy the minimum 5 saved local images and 1 AI-generated image contract.
 
 Recommended article image asset record shape:
 
@@ -268,9 +279,10 @@ Use the sampled corpus to shape article rhythm and reader benefit:
 - Paragraph rhythm: keep paragraphs short, usually 1-3 sentences. Use natural transitions like “说实话”, “先说结论”, “接下来说下怎么用”, “但我更关心的是”.
 - Explanation style: translate technical concepts into practical consequences first, then name the concept. For example, explain what a Skill/MCP/Agent/Command lets the reader do before discussing architecture.
 - Judgment: include informed selection and mild personal stance. Good phrases include “这个地方先别急着兴奋”, “真正值得看的不是 Star 数”, “这个项目适合正在折腾 X 的人”.
-- `AI 前沿`: convert report items into plain-language technical observations: what happened, why it is worth discussing now, who is affected, and what still needs watching.
-- `浪里淘金`: write each item like a small discovery, not a bibliography. Include one-sentence intro, why it is interesting, who should try it, how to try it, risk/limit, and link.
-- Ending: close with a light trend judgment or a reader prompt, not a slogan.
+- `AI 前沿`: convert report items into plain-language observations tied to daily life, work, products, developer workflow, learning, creation, or business decisions. Do not turn it into a paper roundup.
+- `浪里淘金`: write each item like a small discovery, not a bibliography. Include one-sentence intro, why it is interesting, who should try it, how to try it, risk/limit, and link. Prefer tools, projects, demos, cases, and creator/developer玩法 over abstract papers.
+- Opening and ending: never mention internal generation process, “this technical report”, “current environment”, unavailable style corpus, `article.json`, or other AI/process disclosures in public-facing prose. Put those in `metadata.json`, `risk_flags`, or `source_attribution_note` instead.
+- Ending: close with a natural reader prompt or practical takeaway, not a model disclaimer, not a workflow report, and not a slogan.
 - Avoid copying sentence structure, jokes, article titles, or distinctive wording from the samples. The goal is to learn pacing, structure, and reader orientation.
 
 ## WeChat material rule
@@ -307,7 +319,7 @@ Each item should include, when possible:
 ## Common Pitfalls
 
 1. Copying the technical report too directly. Fix by rewriting around reader benefit and plain-language explanations.
-2. Passing schema while still sounding like a report. Fix by removing report-voice phrases and adding judgment, rhythm, and concrete examples.
+2. Passing schema while still sounding like a report. Fix by removing report-voice phrases and adding judgment, rhythm, concrete examples, life/work scenarios, and practical “who should try it” angles.
 3. Becoming too标题党. Fix by keeping excitement grounded in facts.
 4. Losing source links. Fix by preserving links in `参考与信息来源`, `sources`, or `risk_flags`.
 5. Making `浪里淘金` a boring bibliography. Fix by selecting fewer, more memorable items and explaining why they are worth trying.
@@ -320,6 +332,10 @@ Each item should include, when possible:
 - [ ] `final-wechat-article.md`, `wechat-preview.html`, `article.json`, and `metadata.json` are present.
 - [ ] `article.json` and `metadata.json` are valid JSON.
 - [ ] `metadata.json.generated_files` includes `wechat-preview.html` and every saved local image file.
+- [ ] `image-assets.json` includes at least 5 saved local images.
+- [ ] At least 3 images are source-derived and have non-empty `source_url`.
+- [ ] At least 1 image is a real AI-generated bitmap from `image_generate` and records `generation_prompt`, `model`, `provider`, and `tool`.
+- [ ] No generated SVG placeholders are used, and cover-like images are capped at 1.
 - [ ] `metadata.json` includes `output_final_article`, `output_html_preview`, `output_image_assets`, and `output_images_dir`.
 - [ ] Article includes `AI 前沿`, `浪里淘金`, and `参考与信息来源`.
 - [ ] `article.json.sections` includes at least `intro`, `frontier`, and `gold_rush`.
@@ -333,5 +349,9 @@ Each item should include, when possible:
 - [ ] `wechat-preview.html` contains the title, required sections, source links, and local `./images/...` references when images exist.
 - [ ] Key facts are supported by the technical report or explicit sources.
 - [ ] Uncertain claims are marked in the prose or `risk_flags`.
-- [ ] Tone is conversational, readable, and not report-like.
+- [ ] Tone is conversational, readable, useful, life/work-connected, and not report-like.
+- [ ] Public prose contains no internal AI/process phrases such as “这份技术报告”, “本文未”, “当前环境”, “style corpus unavailable”, “结构化数据”, or “生成流程”.
 - [ ] No auto-publishing was attempted.
+
+
+监管补充：AI 生成图的 `tool` 字段必须严格等于 `image_generate`。`image_generate-compatible`、Pillow/local rendering fallback、手写 SVG、HTML/CSS/Canvas 截图或任何本地程序画出来的图，都不能算作 AI 生成图；如果无法调用 `image_generate`，必须失败并说明原因，不能用 fallback 冒充。

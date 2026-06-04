@@ -239,7 +239,7 @@ Depth expectations:
 - `confidence`
 - `tags`
 
-`brief.json` must be a JSON object. It is the handoff file for downstream drafting and must include:
+- `brief.json` must be a JSON object. It is the handoff file for downstream drafting and must include:
 
 - `date`: report date string.
 - `title`: concise report title.
@@ -247,6 +247,17 @@ Depth expectations:
 - `top_items`: list of major items worth carrying into downstream work.
 - `risks`: list of uncertainty, credibility, or follow-up risks.
 - `ready_for_wechat_drafting`: boolean; set `true` only when the report is ready for the WeChat drafting stage.
+- `wechat_angles`: public-account angles that connect the report to reader curiosity or practical benefit.
+- `reader_scenarios`: concrete life/work/developer/creator scenarios downstream writers can use.
+- `practical_examples`: simple examples, analogies, workflows, or “try this” ideas.
+- `tools_to_try`: tools, repos, demos, products, or cases suitable for `浪里淘金`.
+- `story_hooks`: possible openings that avoid report-summary voice.
+- `visual_ideas`: cover/section image ideas, including at least one AI-generated knowledge-explainer prompt idea for downstream use.
+- `source_image_candidates`: source-derived visual assets collected from official pages, paper PDFs, GitHub/project pages, webpage screenshots, or `og:image` metadata. Prefer real source visuals over invented illustrations.
+
+If a technical report only contains highly specialized papers, or if it provides no source-derived visual assets for the WeChat stage, the report is incomplete for the ClawMax media pipeline until `brief.json` provides enough public-facing angles, practical examples, and visual candidates for WeChat drafting.
+
+When possible, run `scripts/collect_source_images.py --report-label <label>` after writing `sources.json`. The report-side visual manifest should be `reports/<label>/image-assets.json`, with files under `reports/<label>/images/`. Generated concept art is allowed only as labeled illustration; official screenshots, paper figures, benchmark charts, product UIs, and logos must come from source capture, not image generation.
 
 ## Image Rules
 

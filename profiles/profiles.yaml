@@ -28,6 +28,14 @@ runtime_defaults:
     default: gpt-5.5
     base_url: "https://vip-sg.freemodel.dev/v1"
     api_key: "<LOCAL_API_KEY>"
+  # Local runtime secrets required by these profiles.
+  # Keep only environment variable names/placeholders here. Real values are
+  # resolved during installation from the user's local Hermes .env and written
+  # only to ~/.hermes/profiles/<profile>/.env.
+  env:
+    OPENAI_API_KEY: "<LOCAL_OPENAI_API_KEY>"
+    WECHAT_MP_APPID: "<LOCAL_WECHAT_MP_APPID>"
+    WECHAT_MP_APPSECRET: "<LOCAL_WECHAT_MP_APPSECRET>"
 
 profiles:
   technicalreportagent:
