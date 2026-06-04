@@ -16,21 +16,21 @@
 已完成：
 
 - TechnicalReportAgent 的人格、skills 和本地同步流程。
-- 真实来源 AI 技术报告生成链路。
-- 集成测试脚本。
-- README / 安装 / 目录规范。
-- 图片保存、生成与文章引用的最小产物规范。
+- 真实来源 AI 技术报告生成链路，输出 `technical-report.md`、`sources.json`、`brief.json`、报告图片清单和运行日志。
+- WeChatArticleAgent 的公众号文章包生成链路，输出 `wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
+- 公众号文章图片约束：至少 5 张本地图片，其中至少 3 张信源/官方/截图类图片，至少 1 张真实 `image_generate` AI 位图。
+- 微信公众号官方 API 草稿创建脚本：可以上传正文图片、上传封面素材、调用 `draft/add` 创建后台草稿，并写入 `wechat-publish.json`。
+- profile / skill / runtime env 同步流程：`profiles/profiles.yaml` 声明本地运行所需 env key，`scripts/install_hermes_profiles.py --configure-from-default` 从默认 Hermes `.env` 同步到 profile runtime。
+- 集成测试、mock 测试和运行日志。
 
 未完成：
 
-- WeChatArticleAgent 的完整自动化生成链路。
-- 日报到公众号草稿的完整联动验证。
-- 每日定时调度。
-- 自动配图与外部图片整合的完整策略（当前只有最小图片产物规范）。
-- 公众号后台自动发布。
+- 每日 6 点定时调度。
+- 微信后台自动发布 / 群发。当前只允许创建草稿，`auto_publish=false`。
+- 更复杂的公众号排版系统、发布前视觉 QA 和草稿自动回读校验。
 - ProductStrategyAgent。
 
-当前仓库处于“日报生成已跑通，后续链路仍在搭建”的阶段。
+当前仓库处于“真实来源日报、公众号文章包、微信公众号后台草稿创建均已跑通；定时调度和自动发布尚未接入”的阶段。
 
 ## 项目架构
 
@@ -41,18 +41,22 @@ TechnicalReportAgent
 ↓
 真实来源检索 + 资料整理 + 专业技术报告生成
 ↓
-reports/YYYY-MM-DD/
+reports/<run-label>/
 ↓
 WeChatArticleAgent
 ↓
-公众号草稿生成
+公众号文章包生成 + 图片包 + 本地 HTML 预览
 ↓
-articles/YYYY-MM-DD/
+articles/<run-label>/
 ↓
-人工审阅 / 发布
+scripts/publish_wechat_article.py
+↓
+微信公众号官方 API：上传图片 + 创建草稿
+↓
+人工审阅 / 手动发布
 ```
 
-第一阶段默认不做自动发布，所有报告和文章草稿都应先由人工审阅。
+第一阶段默认不做自动发布或群发。项目可以通过官方 API 创建微信公众号后台草稿，但最终发布仍需人工审阅。
 
 ## 目录结构
 
@@ -70,9 +74,15 @@ articles/YYYY-MM-DD/
 │   ├── daily-ai-media-pipeline/
 │   └── wechat-article-drafting/
 ├── scripts/
-│   └── install_hermes_profiles.py
+│   ├── collect_source_images.py
+│   ├── finalize_wechat_article.py
+│   ├── install_hermes_profiles.py
+│   └── publish_wechat_article.py
 ├── tests/
-│   └── test_technical_report_agent_run.py
+│   ├── test_finalize_wechat_article.py
+│   ├── test_publish_wechat_article.py
+│   ├── test_technical_report_agent_run.py
+│   └── test_wechat_article_agent_run.py
 ├── memory/
 │   ├── covered-topics.json
 │   └── source-quality.json
@@ -197,6 +207,7 @@ python scripts/install_hermes_profiles.py --configure-from-default
 - `skills/*` 到默认 Hermes skills 目录
 - `skills/*` 到每个项目 profile 自己的 skills 目录
 - 默认 Hermes model/provider/base_url/api_key 配置到项目 profile 的本地 runtime config
+- `profiles/profiles.yaml` 声明的本地 env key，例如 `OPENAI_API_KEY`、`WECHAT_MP_APPID`、`WECHAT_MP_APPSECRET`，从默认 Hermes `.env` 同步到 profile runtime `.env`
 
 这个命令会写入本地 `~/.hermes/`，不会把真实密钥写入项目仓库。
 
@@ -257,7 +268,36 @@ python -u tests/test_wechat_article_agent_run.py \
 
 这里的 Python 脚本不是公众号写稿程序。真正写公众号内容的是 Hermes 里的 `WeChatArticleAgent`；Python 只负责调度、传参、校验和记录日志。
 
-### 6. 查看生成结果
+### 6. 可选：创建微信公众号后台草稿
+
+如果你的公众号已经启用开发者密码，并配置好 IP 白名单，可以把本地文章包提交到公众号后台草稿箱：
+
+```bash
+python scripts/publish_wechat_article.py \
+  --article-label <generated-report-dir> \
+  --mode draft
+```
+
+这个脚本会：
+
+- 读取 `articles/<generated-report-dir>/article.json` 和 `image-assets.json`。
+- 上传正文图片到微信，替换成本地正文 HTML 中可用的微信图片 URL。
+- 上传封面图，获取 `thumb_media_id`。
+- 调用微信公众号官方 API `draft/add` 创建草稿。
+- 写入 `articles/<generated-report-dir>/wechat-publish.json`。
+
+它不会自动发布或群发，`auto_publish` 固定为 `false`。
+
+如果只想验证本地文章包和发布 payload，不调用微信 API：
+
+```bash
+python scripts/publish_wechat_article.py \
+  --article-label <generated-report-dir> \
+  --mode draft \
+  --dry-run
+```
+
+### 7. 查看生成结果
 
 ```bash
 sed -n '1,160p' articles/<generated-report-dir>/final-wechat-article.md
@@ -293,7 +333,7 @@ python scripts/install_hermes_profiles.py --configure-from-default
 python -u tests/test_technical_report_agent_run.py --timeout 540
 ```
 
-### 运行公众号草稿生成测试
+### 运行公众号文章包生成测试
 
 ```bash
 python -u tests/test_wechat_article_agent_run.py \
@@ -302,6 +342,25 @@ python -u tests/test_wechat_article_agent_run.py \
 ```
 
 这个脚本使用 `wechatarticleagent` profile 调用另一个公众号 Agent。Python 只负责选择输入报告、传入本次运行参数、校验 `wechat-draft.md` / `final-wechat-article.md` / `wechat-preview.html` / `article.json` / `metadata.json` / `image-assets.json`、写入运行日志；公众号正文和结构化数据由 WeChatArticleAgent 生成，最终 Markdown、HTML 预览和图片包由后处理脚本稳定产出。
+
+### 创建微信公众号后台草稿
+
+```bash
+python scripts/publish_wechat_article.py \
+  --article-label <generated-report-dir> \
+  --mode draft
+```
+
+调试时可先 dry-run：
+
+```bash
+python scripts/publish_wechat_article.py \
+  --article-label <generated-report-dir> \
+  --mode draft \
+  --dry-run
+```
+
+该脚本会强制微信 API 请求不走代理，避免代理出口 IP 轮换导致微信公众号 IP 白名单错误。
 
 ### 运行 mock 工程烟测
 
@@ -366,7 +425,8 @@ articles/YYYY-MM-DD-or-report-label/
 ├── article.json             # 结构化文章数据，后续排版、配图、发布使用
 ├── image-assets.json        # 文章图片清单，记录本地路径、来源、说明和状态
 ├── images/                  # 文章本地图片，可由报告图片复制或图像模型生成
-└── metadata.json            # 本次生成的交接元数据
+├── metadata.json            # 本次生成的交接元数据
+└── wechat-publish.json      # 可选：微信官方 API 草稿创建 manifest
 ```
 
 说明：
@@ -378,7 +438,8 @@ articles/YYYY-MM-DD-or-report-label/
 - `image-assets.json`：文章图片清单，和 `article.json.image_assets` 保持一致。
 - `images/`：文章本地图片目录。图片可以从技术报告复制，也可以由图像模型生成；Markdown 和 HTML 只引用这里的相对路径。
 - `metadata.json`：记录输入报告、输出文件、生成 profile 和 `auto_publish=false`；必须包含 `output_final_article`、`output_html_preview`、`output_image_assets`、`output_images_dir` 和完整 `generated_files`，其中 `generated_files` 要列出顶层产物和实际保存的本地图片文件。
-- 当前阶段不自动发布；完全自动化发布将在 QA、排版、配图和发布接口稳定后接入。
+- `wechat-publish.json`：当运行 `scripts/publish_wechat_article.py` 时生成。`status=dry_run` 表示只生成本地预览 manifest；`status=draft_created` 表示已经通过微信官方 API 创建后台草稿。该文件不记录 AppSecret 或 access_token。
+- 当前阶段不自动发布；可以创建微信公众号后台草稿，但最终发布/群发仍需人工审阅。
 
 ## 报告质量标准
 
@@ -433,7 +494,8 @@ articles/YYYY-MM-DD-or-report-label/
 - 外部图片必须保留来源链接和版权/使用语境。
 - 生成图必须标注为概念图/解释图，不当成事实证据。
 - 不用图像模型伪造产品截图、官方 logo、benchmark 图或论文图。
-- 如果图片不是必要的，或者生成失败，可以跳过；正文仍应可用。
+- 如果公众号文章图片不满足最低要求，应重新生成或修复文章包，不要把无图稿当作合格公众号文章。
+- 发布到微信草稿箱时，脚本会把本地 `./images/...` 上传为微信图片 URL；`wechat-preview.html` 仍保留本地相对路径，仅用于本地审阅。
 
 ## 常见问题
 
@@ -496,8 +558,9 @@ python -u tests/test_technical_report_agent_run.py --timeout 540
 
 ```bash
 git status --short
-python -m py_compile scripts/install_hermes_profiles.py scripts/finalize_wechat_article.py tests/test_technical_report_agent_run.py tests/test_wechat_article_agent_run.py tests/test_finalize_wechat_article.py
+python -m py_compile scripts/install_hermes_profiles.py scripts/finalize_wechat_article.py scripts/publish_wechat_article.py tests/test_technical_report_agent_run.py tests/test_wechat_article_agent_run.py tests/test_finalize_wechat_article.py tests/test_publish_wechat_article.py
 python tests/test_finalize_wechat_article.py
+python -m pytest tests/test_publish_wechat_article.py -q -o 'addopts='
 python scripts/install_hermes_profiles.py --dry-run --configure-from-default
 ```
 
@@ -507,6 +570,7 @@ python scripts/install_hermes_profiles.py --dry-run --configure-from-default
 - API key / token / cookie
 - 本地 `~/.hermes/` 内容
 - 不希望公开的 `reports/` 或 `articles/` 产物
+- `wechat-publish.json` 中的草稿 media_id 如果不希望公开，也不要提交
 
 ## 进一步阅读
 

@@ -21,8 +21,10 @@
 - 技术报告集成测试脚本。
 - WeChatArticleAgent 文章生成脚本：读取已有报告，调用另一个 `wechatarticleagent` profile，输出 `wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
 - 公众号结构化数据第一版：`article.json` 用于后续自动排版、配图、QA 和发布。
-- 图片最小产物规范：报告和文章都使用本地 `images/` 目录与 `image-assets.json` 清单，先保证能保存、生成和引用图片。
+- 图片产物规范已从“最小可选”升级为强制约束：公众号文章至少 5 张本地图片，其中至少 3 张信源/官方/截图类图片，至少 1 张真实 `image_generate` AI 位图。
 - 公众号最终文章包契约：`article.json` 是结构化源，后处理生成 `final-wechat-article.md`、`wechat-preview.html`、`image-assets.json`、`images/` 和完整 `metadata.json.generated_files`，其中 `generated_files` 覆盖顶层产物和实际保存的本地图片文件。
+- 微信公众号官方 API 草稿创建 adapter：`scripts/publish_wechat_article.py` 可以上传正文图、上传封面素材、创建后台草稿并写 `wechat-publish.json`。
+- 微信发布脚本已处理本地 `.env` 自动加载、敏感 URL 脱敏、图片 src 替换、基础内联排版，以及微信 API 强制无代理请求以避免代理出口 IP 轮换导致白名单失败。
 - 项目级 `memory/` 业务记忆：`covered-topics.json` 与 `source-quality.json`。
 - 项目级 `runs/` 运行日志：追加式总日志和单次运行详情。
 - README 基础教程与项目架构说明。
@@ -36,11 +38,11 @@
 ### 未完成
 
 - 每日定时调度。
-- 自动配图与外部图片整合的完整策略（当前先做最小图片产物，不做复杂设计系统）。
-- 公众号后台自动发布。
+- 更复杂的自动配图、视觉 QA 和公众号排版系统。
+- 公众号后台自动发布 / 群发。当前只创建草稿，不自动发布。
 - ProductStrategyAgent。
 
-当前仓库处于“日报生成已跑通，后续链路仍在搭建”的阶段。
+当前仓库处于“真实来源日报、公众号文章包、微信公众号后台草稿创建均已跑通；定时调度和自动发布尚未接入”的阶段。
 
 ## 当前理解
 
@@ -55,9 +57,11 @@ TechnicalReportAgent 搜集 AI 前沿信息
 ↓
 生成专业技术报告
 ↓
-WeChatArticleAgent 改写成微信公众号推文，并生成 `final-wechat-article.md`、`wechat-preview.html` 与结构化 `article.json`
+WeChatArticleAgent 改写成微信公众号推文，并生成 `final-wechat-article.md`、`wechat-preview.html`、结构化 `article.json` 与本地图片包
 ↓
-自动 QA / 排版 / 配图 / 发布能力逐步接入
+`publish_wechat_article.py` 上传图片并通过微信公众号官方 API 创建后台草稿
+↓
+人工审阅后手动发布；自动发布能力后续再接入
 ```
 
 内容风格上有两个层次：
@@ -74,7 +78,8 @@ WeChatArticleAgent 改写成微信公众号推文，并生成 `final-wechat-arti
 
 第一阶段暂不做以下内容：
 
-- 自动登录微信公众号后台并直接发布（当前先生成草稿、结构化数据、最终 Markdown 和本地 HTML 预览，最终目标仍是全自动发布）。
+- 自动登录微信公众号网页后台并直接发布。当前采用官方 API 创建草稿，不做浏览器模拟登录。
+- 自动发布 / 群发。当前只创建后台草稿，最终发布仍需人工审阅。
 - 产品 Agent 的完整实现。
 - 多平台分发，例如小红书、B 站、知乎、Twitter/X。
 - 复杂的用户画像、投放策略和商业化分析。
@@ -180,13 +185,20 @@ reports/YYYY-MM-DD/
 ↓
 WeChatArticleAgent
 ↓
-articles/YYYY-MM-DD/
+articles/YYYY-MM-DD-or-report-label/
 ├── wechat-draft.md
 ├── final-wechat-article.md
 ├── wechat-preview.html
 ├── article.json
+├── metadata.json
 ├── image-assets.json
 └── images/
+↓
+scripts/publish_wechat_article.py
+├── 上传正文图片
+├── 上传封面素材
+├── 创建微信公众号后台草稿
+└── 写 wechat-publish.json
 ↓
 人工审阅
 ↓
@@ -210,9 +222,15 @@ articles/YYYY-MM-DD/
 │   ├── daily-ai-media-pipeline/
 │   └── wechat-article-drafting/
 ├── scripts/
-│   └── install_hermes_profiles.py
+│   ├── collect_source_images.py
+│   ├── finalize_wechat_article.py
+│   ├── install_hermes_profiles.py
+│   └── publish_wechat_article.py
 ├── tests/
-│   └── test_technical_report_agent_run.py
+│   ├── test_finalize_wechat_article.py
+│   ├── test_publish_wechat_article.py
+│   ├── test_technical_report_agent_run.py
+│   └── test_wechat_article_agent_run.py
 ├── memory/
 │   ├── covered-topics.json
 │   └── source-quality.json
@@ -388,8 +406,9 @@ run-daily --date today --skip-search
 - 已验证 TechnicalReportAgent 的真实来源日报生成链路。
 - WeChatArticleAgent 已具备最终公众号文章包输出：`wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
 - 图片和预览链路已明确强制产物规范：公众号文章原则上不少于 5 张本地图片，其中至少 1 张 AI 生成图；保存到本地 `images/`，记录 `image-assets.json`，Markdown/HTML/JSON 使用相对路径引用。
-- 自动调度、复杂自动配图、自动发布仍未完成。
-- 后续规划应围绕“日报已通、最终文章包初通、调度未通、图片先最小可用”这一真实状态继续推进。
+- 微信公众号官方 API 草稿创建已跑通：本地文章包可上传图片并创建后台草稿；旧问题包括图片 src 替换错误和代理出口 IP 轮换，已在脚本中修复。
+- 自动调度、更复杂排版/视觉 QA、自动发布仍未完成。
+- 后续规划应围绕“日报已通、最终文章包已通、后台草稿创建已通、调度未通、自动发布未通”这一真实状态继续推进。
 
 ## 待决策问题
 
@@ -404,7 +423,6 @@ run-daily --date today --skip-search
 建议先从最小可运行版本开始：
 
 1. 继续提升 `WeChatArticleAgent` 的真实文章质量，减少报告腔并加强读者收益感。
-2. 验证最终文章包契约：`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json.generated_files`、`image-assets.json` 与 `images/` 一致。
-3. 接入每天 6 点调度。
-
-完成这一步后，再完善复杂自动配图、排版和调度。
+2. 增加发布前/发布后 QA：检查微信草稿中图片、标题、摘要、封面和基础排版是否符合预期。
+3. 接入每天 6 点调度，形成日报 → 文章包 → 微信草稿的自动流水线，但仍保留人工发布确认。
+4. 再逐步完善复杂自动配图、排版和视觉审校。
