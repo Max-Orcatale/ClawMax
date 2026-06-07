@@ -204,7 +204,7 @@ def normalize_article_image_assets(*, article: dict[str, Any], article_dir: Path
     normalized: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
     for index, asset in enumerate(as_list(article.get("image_assets")), start=1):
-        if not isinstance(asset, dict) or len(normalized) >= max_images:
+        if not isinstance(asset, dict):
             continue
         local_path_value = str(asset.get("local_path") or asset.get("path") or "").strip()
         if not local_path_value:
@@ -241,8 +241,19 @@ def normalize_article_image_assets(*, article: dict[str, Any], article_dir: Path
 def merge_image_assets(*, article_assets: list[dict[str, Any]], report_assets: list[dict[str, Any]], max_images: int) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
-    for asset in article_assets + report_assets:
-        if len(merged) >= max_images:
+
+    for asset in article_assets:
+        if not isinstance(asset, dict):
+            continue
+        local_path = str(asset.get("local_path") or "")
+        if local_path in seen_paths:
+            continue
+        seen_paths.add(local_path)
+        merged.append(asset)
+
+    report_count = 0
+    for asset in report_assets:
+        if report_count >= max_images:
             break
         if not isinstance(asset, dict):
             continue
@@ -251,6 +262,7 @@ def merge_image_assets(*, article_assets: list[dict[str, Any]], report_assets: l
             continue
         seen_paths.add(local_path)
         merged.append(asset)
+        report_count += 1
     return merged
 
 

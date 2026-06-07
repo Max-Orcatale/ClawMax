@@ -1,0 +1,12 @@
+[Unit]
+Description=ClawMax full real daily AI media pipeline
+Documentation=file:/home/max-orca/Max_workspace/Programs/ClawMax/README.md
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/max-orca/Max_workspace/Programs/ClawMax
+EnvironmentFile=/home/max-orca/Max_workspace/Programs/ClawMax/.env.systemd
+ExecStart=/home/max-orca/Max_workspace/Programs/ClawMax/run_full_real_pipeline.py
+StandardOutput=append:/home/max-orca/Max_workspace/Programs/ClawMax/runs/systemd-daily-pipeline.log
+StandardError=append:/home/max-orca/Max_workspace/Programs/ClawMax/runs/systemd-daily-pipeline.log

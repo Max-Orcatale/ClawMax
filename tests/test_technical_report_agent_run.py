@@ -40,6 +40,7 @@ import datetime as dt
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -133,6 +134,14 @@ def fail(message: str) -> None:
 def require(condition: bool, message: str) -> None:
     if not condition:
         fail(message)
+
+
+def safe_label(value: str) -> str:
+    value = value.strip()
+    require(bool(value), "Output label must not be empty")
+    require(bool(re.fullmatch(r"[A-Za-z0-9_.-]+", value)), f"Unsafe output label: {value!r}")
+    require(value not in {".", ".."}, f"Unsafe output label: {value!r}")
+    return value
 
 
 def read_text(path: Path) -> str:
@@ -265,6 +274,10 @@ def build_mock_smoke_prompt(output_label: str) -> str:
 - 只验证 Hermes profile、skills 和文件写入链路。
 - 明确标注这是工程烟测，不是专业日报。
 - 不要自动发布。
+- `sources.json` 必须至少包含 3 条 mock source record，每条都包含 title、url、source_type、published_at、retrieved_at、summary、confidence、tags。
+- `brief.json.ready_for_wechat_drafting` 必须为 true，因为本次端到端 smoke 需要把报告继续交给 WeChatArticleAgent。
+- `brief.json` 必须包含面向公众号下游的 `wechat_angles`、`reader_scenarios`、`practical_examples`、`tools_to_try`、`story_hooks`、`visual_ideas` 和 `source_image_candidates` 字段；这些可以是 mock 内容，但必须明确标注 smoke/mock。
+- `technical-report.md` 必须包含 `AI 前沿`、`浪里淘金` 可用的 mock 素材、至少 3 个 source link，以及风险/不确定性说明。
 """.strip()
 
 
@@ -356,7 +369,7 @@ def validate_sources(path: Path, *, mock_smoke: bool) -> None:
         require("mock" in serialized or "模拟" in serialized, "mock smoke sources should explicitly indicate mock/simulated sources")
     else:
         require("example.com" not in serialized, "real-source report must not use example.com URLs")
-        require("mock" not in serialized and "模拟" not in serialized, "real-source report must not use mock/simulated sources")
+        require("mock" not in serialized and "smoke-test" not in serialized, "real-source report must not use mock/smoke-test sources")
 
     for index, item in enumerate(data):
         require(isinstance(item, dict), f"sources.json item #{index} should be an object")
@@ -551,6 +564,8 @@ def write_run_log(run_id: str, event: dict) -> None:
 
 
 def make_output_label(args: argparse.Namespace) -> str:
+    if args.output_label:
+        return safe_label(args.output_label)
     base_date = args.date or dt.date.today().isoformat()
     if args.official_today_output:
         return base_date
@@ -568,6 +583,7 @@ def quote_command(command: Iterable[str]) -> str:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Hermes as ClawMax TechnicalReportAgent and validate generated report files.")
     parser.add_argument("--date", default=None, help="Base date to use, default: today, format YYYY-MM-DD.")
+    parser.add_argument("--output-label", default=None, help="Exact output directory label under reports/. Overrides --date and --official-today-output.")
     parser.add_argument("--official-today-output", action="store_true", help="Write to reports/YYYY-MM-DD instead of a unique reports/YYYY-MM-DD-real-test-HHMMSS directory.")
     parser.add_argument("--force", action="store_true", help="Delete existing output directory before running.")
     parser.add_argument("--dry-run", action="store_true", help="Print the Hermes command without executing it.")

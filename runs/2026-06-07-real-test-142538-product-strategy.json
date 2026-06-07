@@ -1,0 +1,15 @@
+{
+  "run_id": "2026-06-07-real-test-142538-product-strategy",
+  "status": "completed",
+  "label": "2026-06-07-real-test-142538",
+  "output_dir": "products/2026-06-07-real-test-142538",
+  "outputs": {
+    "opportunity_cards": "products/2026-06-07-real-test-142538/opportunity-cards.md",
+    "opportunities_json": "products/2026-06-07-real-test-142538/opportunities.json",
+    "metadata": "products/2026-06-07-real-test-142538/metadata.json"
+  },
+  "opportunity_count": 4,
+  "real_count": 1,
+  "hypothetical_count": 3,
+  "finished_at": "2026-06-07T07:18:01.562455+00:00"
+}

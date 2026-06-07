@@ -1,0 +1,11 @@
+[Unit]
+Description=Run ClawMax full real pipeline every day at 06:00
+Documentation=file:/home/max-orca/Max_workspace/Programs/ClawMax/README.md
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+Persistent=true
+Unit=clawmax-daily-real-pipeline.service
+
+[Install]
+WantedBy=timers.target

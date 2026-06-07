@@ -1,0 +1,56 @@
+{
+  "run_id": "2026-06-07-mock-smoke-131013-wechat",
+  "status": "completed",
+  "mode": "mock_smoke",
+  "profile": "wechatarticleagent",
+  "skills": [
+    "clawmax:wechat-article-drafting",
+    "clawmax:daily-ai-media-pipeline"
+  ],
+  "started_at": "2026-06-07T06:09:19.722789+00:00",
+  "finished_at": "2026-06-07T06:09:19.743067+00:00",
+  "duration_seconds": 0.02,
+  "input_report_label": "2026-06-07-mock-smoke-131013",
+  "output_label": "2026-06-07-mock-smoke-131013",
+  "input_dir": "reports/2026-06-07-mock-smoke-131013",
+  "output_dir": "articles/2026-06-07-mock-smoke-131013",
+  "outputs": {
+    "draft": "articles/2026-06-07-mock-smoke-131013/wechat-draft.md",
+    "article_json": "articles/2026-06-07-mock-smoke-131013/article.json",
+    "metadata": "articles/2026-06-07-mock-smoke-131013/metadata.json",
+    "final_article": "articles/2026-06-07-mock-smoke-131013/final-wechat-article.md",
+    "html_preview": "articles/2026-06-07-mock-smoke-131013/wechat-preview.html",
+    "image_assets": "articles/2026-06-07-mock-smoke-131013/image-assets.json",
+    "images_dir": "articles/2026-06-07-mock-smoke-131013/images",
+    "qa_report": "articles/2026-06-07-mock-smoke-131013/qa-report.json",
+    "review_notes": "articles/2026-06-07-mock-smoke-131013/review-notes.md"
+  },
+  "metrics": {
+    "draft_chars": 1785,
+    "final_article_chars": 1349,
+    "html_preview_chars": 4799,
+    "section_count": 6,
+    "title_candidate_count": 2,
+    "risk_flag_count": 2,
+    "image_asset_count": 5,
+    "saved_image_count": 5
+  },
+  "qa": {
+    "status": "passed",
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "issues": 0
+    },
+    "issue_count": 0
+  },
+  "auto_publish": false,
+  "proxy_env_keys": [
+    "ALL_PROXY",
+    "HTTPS_PROXY",
+    "HTTP_PROXY",
+    "all_proxy",
+    "http_proxy",
+    "https_proxy"
+  ]
+}

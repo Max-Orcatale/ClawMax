@@ -12,6 +12,7 @@ schedule:
 outputs:
   reports_dir: reports
   articles_dir: articles
+  products_dir: products
   report_filename: technical-report.md
   sources_filename: sources.json
   brief_filename: brief.json
@@ -53,6 +54,16 @@ agents:
     require_source_derived_images: true
     fail_if_image_generation_fails: true
     fail_if_source_images_missing: true
+  product_strategy:
+    enabled: true
+    profile: productstrategyagent
+    skills:
+      - product-opportunity-analysis
+      - daily-ai-media-pipeline
+    min_opportunities: 3
+    max_opportunities: 6
+    include_hypothetical_products: true
+    required_real_product: ClawMax
 
 image_gen:
   provider: openai

@@ -16,6 +16,7 @@ file contracts so the workflow can become automated safely.
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime as dt
 import json
 import os
@@ -30,6 +31,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.finalize_wechat_article import finalize_wechat_article_bundle
+from scripts.qa_article_bundle import qa_article_bundle
 
 REPORTS_DIR = REPO_ROOT / "reports"
 ARTICLES_DIR = REPO_ROOT / "articles"
@@ -323,6 +325,180 @@ def quote_command(command: Iterable[str]) -> str:
     return " ".join(shlex.quote(part) for part in command)
 
 
+TINY_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+)
+
+
+def write_mock_image(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(TINY_PNG)
+
+
+def build_mock_paragraphs() -> str:
+    return "\n\n".join(
+        [
+            "这次我没有把它当成一条新闻看，而是当成一次内容团队工作流的排练：一个 Agent 先整理素材，一个 Agent 把它讲给普通读者听，最后再由 QA 检查有没有漏文件、漏图片和漏来源。",
+            "这里最有意思的不是 mock source 本身，而是这条链路终于有了可验证的交接物。只要 report、article、image-assets、preview 和 QA report 都能稳定出现，后面才谈得上定时运行和微信草稿。",
+            "对创作者来说，这像是把每天最麻烦的几件事拆开：有人找资料，有人写稿，有人配图，有人检查。每一步都留下文件，而不是把全部结果藏在一次聊天里。",
+            "当然，这还是工程烟测，不是正式报道。里面的 OpenAI agent SDK、具身智能 benchmark 和开发者工具 release 都是 mock 线索，用来确认结构，不用来证明真实行业变化。",
+            "我更关心的是这种流程能不能让内容团队少一点玄学。过去一篇文章写完以后，问题常常藏在最后：来源有没有漏、图片是不是本地文件、公众号后台能不能保存、有没有把内部说明写进正文。现在这些问题可以被拆成一个个检查项。",
+            "如果明天要接真实日报，这条 smoke 链路的价值就很直接：只要把 mock source 换成真实来源，把占位图换成真实截图和真正的 image_generate 图片，后面的 final article、HTML preview、QA report 和 product cards 都不用重新设计。",
+        ]
+    )
+
+
+def write_mock_smoke_outputs(report_label: str, output_label: str, input_info: dict) -> None:
+    output_dir = ARTICLES_DIR / output_label
+    images_dir = output_dir / IMAGES_DIRNAME
+    output_dir.mkdir(parents=True, exist_ok=True)
+    images_dir.mkdir(parents=True, exist_ok=True)
+    image_assets = []
+    source_urls = [source.get("url", "https://example.com/mock/source") for source in input_info.get("sources", [])]
+    for index in range(3):
+        filename = f"source-{index + 1}.png"
+        local_path = f"articles/{output_label}/{IMAGES_DIRNAME}/{filename}"
+        write_mock_image(REPO_ROOT / local_path)
+        image_assets.append(
+            {
+                "id": f"source-{index + 1}",
+                "purpose": "section_illustration",
+                "kind": "source_image",
+                "local_path": local_path,
+                "markdown_ref": f"![mock source image {index + 1}](./{IMAGES_DIRNAME}/{filename})",
+                "caption": f"工程烟测 source-derived 图片 {index + 1}",
+                "source_url": source_urls[index % len(source_urls)] if source_urls else "https://example.com/mock/source",
+                "source_title": f"Smoke source {index + 1}",
+                "license_or_usage_note": "mock smoke placeholder, not a real source visual",
+                "status": "saved",
+                "notes": "工程烟测占位图片，只验证本地图片链路。",
+            }
+        )
+    ai_filename = "ai-explainer.png"
+    ai_local_path = f"articles/{output_label}/{IMAGES_DIRNAME}/{ai_filename}"
+    write_mock_image(REPO_ROOT / ai_local_path)
+    image_assets.append(
+        {
+            "id": "ai-explainer",
+            "purpose": "section_illustration",
+            "kind": "generated",
+            "local_path": ai_local_path,
+            "markdown_ref": f"![mock AI explainer](./{IMAGES_DIRNAME}/{ai_filename})",
+            "caption": "工程烟测 AI 讲解图占位",
+            "generation_prompt": "Mock smoke test image_generate placeholder for ClawMax workflow explainer.",
+            "tool": "image_generate",
+            "provider": "mock-smoke-provider",
+            "model": "mock-smoke-image-model",
+            "status": "saved",
+            "notes": "工程烟测占位图片，用于验证 image_generate metadata contract。",
+        }
+    )
+    extra_filename = "workflow-card.png"
+    extra_local_path = f"articles/{output_label}/{IMAGES_DIRNAME}/{extra_filename}"
+    write_mock_image(REPO_ROOT / extra_local_path)
+    image_assets.append(
+        {
+            "id": "workflow-card",
+            "purpose": "diagram",
+            "kind": "supporting_image",
+            "local_path": extra_local_path,
+            "markdown_ref": f"![mock workflow card](./{IMAGES_DIRNAME}/{extra_filename})",
+            "caption": "工程烟测工作流卡片占位",
+            "status": "saved",
+            "notes": "工程烟测占位图片。",
+        }
+    )
+    paragraphs = build_mock_paragraphs()
+    draft = f"""# 我给 AI 内容团队跑了一次端到端烟测
+
+## 开场白
+
+{image_assets[0]['markdown_ref']}
+
+{paragraphs}
+
+## AI 前沿
+
+{image_assets[1]['markdown_ref']}
+
+Agent 工作流真正值得看的地方，不是它能不能一次写出一篇漂亮文章，而是它能不能把输入、输出和检查点拆清楚。今天这次 smoke 用 mock source 模拟了三类素材：agent 能力、具身智能 benchmark、开发者工具 release。它们不是真新闻，但很适合验证报告到文章的交接。
+
+如果这套链路稳定，正式日报就可以把真实来源放进同样的位置：source 进 `sources.json`，公共读者角度进 `brief.json`，公众号正文再负责把复杂信息讲得像人话。
+
+## 浪里淘金
+
+{image_assets[2]['markdown_ref']}
+
+这次真正值得淘的不是外部工具，而是 ClawMax 这个项目本身。它已经有三个清楚的角色：技术报告、公众号文章、产品机会卡。每个角色都不需要一次做太多，只要把自己的文件交出来，并且接受下一步检查。
+
+{image_assets[3]['markdown_ref']}
+
+对小团队来说，这种设计比“一个万能 Agent 解决一切”更可靠。你可以先看报告，再看文章预览，再看 QA 报告，最后看产品机会卡。哪一步坏了，就修哪一步。
+
+## 今天值得想一想
+
+{image_assets[4]['markdown_ref']}
+
+如果一条内容流水线不能被验证，它就很难变成产品。今天这个 smoke 的意义是：报告、文章、图片、预览、QA、产品机会卡这些产物都能落到本地目录里，后续才有资格讨论定时运行、微信草稿回读和自动发布。
+
+## 结尾互动
+
+如果你也在做 AI 内容团队，最应该先自动化的可能不是写作本身，而是把每一步的输入输出固定下来。你会先自动化找资料、写稿、配图，还是 QA？
+
+## 参考与信息来源
+
+- reports/{report_label}/technical-report.md
+- https://example.com/mock/openai-agent-sdk-smoke
+- https://example.com/mock/embodied-ai-benchmark-smoke
+- https://example.com/mock/developer-tool-release-smoke
+"""
+    sections = [
+        {"heading": "开场白", "type": "intro", "content_md": paragraphs},
+        {"heading": "AI 前沿", "type": "frontier", "content_md": "Agent 工作流的重点是可验证交接，而不是一次性生成。"},
+        {"heading": "浪里淘金", "type": "gold_rush", "content_md": "ClawMax 本身是这次 smoke 中的真实项目机会。"},
+        {"heading": "今天值得想一想", "type": "reflection", "content_md": "先固定输入输出，再谈自动化。"},
+        {"heading": "结尾互动", "type": "closing", "content_md": "你会先自动化找资料、写稿、配图，还是 QA？"},
+        {"heading": "参考与信息来源", "type": "references", "content_md": "- reports/{}/technical-report.md\n- https://example.com/mock/openai-agent-sdk-smoke\n- https://example.com/mock/embodied-ai-benchmark-smoke\n- https://example.com/mock/developer-tool-release-smoke".format(report_label)},
+    ]
+    (output_dir / "wechat-draft.md").write_text(draft, encoding="utf-8")
+    article = {
+        "date": dt.date.today().isoformat(),
+        "title": "我给 AI 内容团队跑了一次端到端烟测",
+        "title_candidates": ["我给 AI 内容团队跑了一次端到端烟测", "内容 Agent 靠不靠谱，先看它能不能通过 QA"],
+        "digest": "一次明确标记为 mock 的 ClawMax 端到端验证：报告、文章、图片、QA 和产品机会卡全部落地。",
+        "sections": sections,
+        "source_report": f"reports/{report_label}/technical-report.md",
+        "sources": input_info.get("sources", []),
+        "risk_flags": ["工程烟测内容，不代表正式 AI 技术日报。", "图片为 mock placeholder，仅验证文件链路。"],
+        "style_references": [],
+        "external_reference_accounts": [],
+        "source_attribution_note": "本次为工程烟测，参考与信息来源只列 mock report 和 mock source URL。",
+        "image_assets": image_assets,
+        "auto_publish_eligible": False,
+    }
+    metadata = {
+        "date": dt.date.today().isoformat(),
+        "source_report": f"reports/{report_label}/technical-report.md",
+        "output_draft": f"articles/{output_label}/wechat-draft.md",
+        "output_article_json": f"articles/{output_label}/article.json",
+        "output_final_article": f"articles/{output_label}/final-wechat-article.md",
+        "output_html_preview": f"articles/{output_label}/wechat-preview.html",
+        "output_image_assets": f"articles/{output_label}/image-assets.json",
+        "output_images_dir": f"articles/{output_label}/images",
+        "generated_files": [
+            f"articles/{output_label}/wechat-draft.md",
+            f"articles/{output_label}/article.json",
+            f"articles/{output_label}/metadata.json",
+            *[asset["local_path"] for asset in image_assets],
+        ],
+        "auto_publish": False,
+        "generator_profile": PROFILE_NAME,
+        "mode": "mock_smoke",
+    }
+    write_json(output_dir / "article.json", article)
+    write_json(output_dir / "metadata.json", metadata)
+
+
 def run_hermes(command: list[str], *, timeout_seconds: int) -> int:
     process = subprocess.Popen(
         command,
@@ -507,6 +683,13 @@ def validate_outputs(output_label: str, *, report_label: str) -> dict:
     html_text = validate_html_preview(html_preview_path)
     image_assets = validate_image_assets(image_assets_path, output_label=output_label)
     require(article.get("image_assets") == image_assets, "article.json image_assets must match image-assets.json")
+    qa_report = qa_article_bundle(output_label, repo_root=REPO_ROOT)
+    require(
+        qa_report.get("status") != "failed",
+        "Article bundle QA failed. See "
+        f"{qa_report.get('output_qa_report') or output_dir / 'qa-report.json'} and "
+        f"{qa_report.get('output_review_notes') or output_dir / 'review-notes.md'}",
+    )
     return {
         "output_dir": str(output_dir.relative_to(REPO_ROOT)),
         "draft_path": str(draft_path.relative_to(REPO_ROOT)),
@@ -524,6 +707,13 @@ def validate_outputs(output_label: str, *, report_label: str) -> dict:
         "section_count": len(article.get("sections") or []),
         "title_candidate_count": len(article.get("title_candidates") or []),
         "risk_flag_count": len(article.get("risk_flags") or []),
+        "qa": {
+            "status": qa_report.get("status"),
+            "summary": qa_report.get("summary", {}),
+            "issue_count": len(qa_report.get("issues") or []),
+        },
+        "qa_report_path": qa_report.get("output_qa_report") or str((output_dir / "qa-report.json").relative_to(REPO_ROOT)),
+        "review_notes_path": qa_report.get("output_review_notes") or str((output_dir / "review-notes.md").relative_to(REPO_ROOT)),
         "metadata": metadata,
     }
 
@@ -540,6 +730,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--force", action="store_true", help="Delete existing non-empty output directory before running.")
     parser.add_argument("--dry-run", action="store_true", help="Print the Hermes command without executing it.")
     parser.add_argument("--timeout", type=int, default=900, help="Hermes run timeout in seconds. Default: 900.")
+    parser.add_argument("--mock-smoke", action="store_true", help="Write deterministic mock article outputs, then run finalization and QA without launching Hermes.")
     return parser.parse_args(argv)
 
 
@@ -578,8 +769,12 @@ def main(argv: list[str]) -> int:
 
     print("\nRunning Hermes WeChatArticleAgent integration test...\n")
     try:
-        exit_code = run_hermes(command, timeout_seconds=args.timeout)
-        require(exit_code == 0, f"Hermes command failed with exit code {exit_code}")
+        if args.mock_smoke:
+            print("Writing deterministic WeChatArticleAgent mock-smoke outputs...\n")
+            write_mock_smoke_outputs(report_label, output_label, input_info)
+        else:
+            exit_code = run_hermes(command, timeout_seconds=args.timeout)
+            require(exit_code == 0, f"Hermes command failed with exit code {exit_code}")
 
         print("\nFinalizing article bundle...\n")
         finalize_wechat_article_bundle(
@@ -602,7 +797,7 @@ def main(argv: list[str]) -> int:
         run_id,
         {
             "status": "completed",
-            "mode": "draft_and_structured_data",
+            "mode": "mock_smoke" if args.mock_smoke else "draft_and_structured_data",
             "profile": PROFILE_NAME,
             "skills": [WECHAT_SKILL, PIPELINE_SKILL],
             "started_at": started_at,
@@ -620,6 +815,8 @@ def main(argv: list[str]) -> int:
                 "html_preview": validation["html_preview_path"],
                 "image_assets": validation["image_assets_path"],
                 "images_dir": validation["images_dir"],
+                "qa_report": validation["qa_report_path"],
+                "review_notes": validation["review_notes_path"],
             },
             "metrics": {
                 "draft_chars": validation["draft_chars"],
@@ -631,6 +828,7 @@ def main(argv: list[str]) -> int:
                 "image_asset_count": validation["image_asset_count"],
                 "saved_image_count": validation["saved_image_count"],
             },
+            "qa": validation["qa"],
             "auto_publish": False,
             "proxy_env_keys": sorted(proxy_env_snapshot().keys()),
         },
@@ -641,6 +839,9 @@ def main(argv: list[str]) -> int:
     print(f"Final article: {output_dir / FINAL_ARTICLE_FILENAME}")
     print(f"HTML preview: {output_dir / HTML_PREVIEW_FILENAME}")
     print(f"Image assets: {output_dir / IMAGE_ASSETS_FILENAME}")
+    print(f"QA status: {validation['qa']['status']}")
+    print(f"QA report: {REPO_ROOT / validation['qa_report_path']}")
+    print(f"Review notes: {REPO_ROOT / validation['review_notes_path']}")
     print(f"Run log: {RUNS_DIR / (run_id + '.json')}")
     return 0
 

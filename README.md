@@ -1,6 +1,6 @@
 # AI 技术报告数字员工
 
-本项目基于 Hermes Agent 构建一个 AI 技术报告数字员工，用于自动生成每日 AI 专业技术报告，并进一步支持微信公众号草稿改写。
+本项目基于 Hermes Agent 构建一个 AI 技术报告数字员工，用于自动生成每日 AI 专业技术报告，进一步支持微信公众号草稿改写，并轻量提炼产品机会卡。
 
 项目的核心思路是：
 
@@ -9,7 +9,7 @@
 - `scripts/` 负责把项目源文件同步到本地 Hermes runtime。
 - `memory/` 保存 ClawMax 项目级业务记忆，例如已报道话题和来源质量。
 - `runs/` 保存每次日报生成的运行日志。
-- `reports/` 和 `articles/` 分别保存技术报告和公众号草稿产物。
+- `reports/`、`articles/` 和 `products/` 分别保存技术报告、公众号草稿产物和产品机会卡。
 
 ## 当前完成情况
 
@@ -19,18 +19,22 @@
 - 真实来源 AI 技术报告生成链路，输出 `technical-report.md`、`sources.json`、`brief.json`、报告图片清单和运行日志。
 - WeChatArticleAgent 的公众号文章包生成链路，输出 `wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
 - 公众号文章图片约束：至少 5 张本地图片，其中至少 3 张信源/官方/截图类图片，至少 1 张真实 `image_generate` AI 位图。
+- 公众号文章包自动 QA：输出 `qa-report.json` 和 `review-notes.md`，失败时阻断生成流程。
+- ProductStrategyAgent 的轻量产品机会卡链路，输出 `products/<label>/opportunity-cards.md`、`opportunities.json` 和 `metadata.json`。
 - 微信公众号官方 API 草稿创建脚本：可以上传正文图片、上传封面素材、调用 `draft/add` 创建后台草稿，并写入 `wechat-publish.json`。
+- 根目录全真实流水线脚本：`run_full_real_pipeline.py`，串联真实技术报告、真实公众号文章包、自动 QA、微信后台草稿创建和产品机会卡。
+- 每日 6 点 systemd user timer 模板：`systemd/clawmax-daily-real-pipeline.service` 和 `systemd/clawmax-daily-real-pipeline.timer`。
 - profile / skill / runtime env 同步流程：`profiles/profiles.yaml` 声明本地运行所需 env key，`scripts/install_hermes_profiles.py --configure-from-default` 从默认 Hermes `.env` 同步到 profile runtime。
 - 集成测试、mock 测试和运行日志。
 
 未完成：
 
-- 每日 6 点定时调度。
+- 每日 6 点定时调度模板已提供，但需要在目标机器上手动复制、启用 timer，并填写本地 `.env.systemd`。
 - 微信后台自动发布 / 群发。当前只允许创建草稿，`auto_publish=false`。
 - 更复杂的公众号排版系统、发布前视觉 QA 和草稿自动回读校验。
-- ProductStrategyAgent。
+- 更完整的增长数据、阅读数据自动回流、投放执行和商业化分析闭环。
 
-当前仓库处于“真实来源日报、公众号文章包、微信公众号后台草稿创建均已跑通；定时调度和自动发布尚未接入”的阶段。
+当前仓库处于“真实来源日报、公众号文章包、微信公众号后台草稿创建均已跑通；每日 6 点定时器模板已提供但尚需本机启用；自动发布尚未接入”的阶段。
 
 ## 项目架构
 
@@ -49,6 +53,10 @@ WeChatArticleAgent
 ↓
 articles/<run-label>/
 ↓
+ProductStrategyAgent（可选）
+↓
+products/<run-label>/opportunity-cards.md
+↓
 scripts/publish_wechat_article.py
 ↓
 微信公众号官方 API：上传图片 + 创建草稿
@@ -65,24 +73,37 @@ scripts/publish_wechat_article.py
 ├── README.md
 ├── AGENTS.md
 ├── config.yaml
+├── run_full_real_pipeline.py
+├── .env.systemd.example
 ├── profiles/
 │   ├── profiles.yaml
 │   ├── technical-report-agent.md
-│   └── wechat-article-agent.md
+│   ├── wechat-article-agent.md
+│   └── product-strategy-agent.md
 ├── skills/
 │   ├── ai-technical-report/
 │   ├── daily-ai-media-pipeline/
+│   ├── product-opportunity-analysis/
 │   └── wechat-article-drafting/
 ├── scripts/
 │   ├── collect_source_images.py
 │   ├── finalize_wechat_article.py
 │   ├── install_hermes_profiles.py
-│   └── publish_wechat_article.py
+│   ├── publish_wechat_article.py
+│   ├── qa_article_bundle.py
+│   └── run_product_strategy_agent.py
+├── systemd/
+│   ├── clawmax-daily-real-pipeline.service
+│   └── clawmax-daily-real-pipeline.timer
 ├── tests/
 │   ├── test_finalize_wechat_article.py
+│   ├── test_full_real_pipeline.py
+│   ├── test_product_strategy_agent_run.py
 │   ├── test_publish_wechat_article.py
+│   ├── test_qa_article_bundle.py
 │   ├── test_technical_report_agent_run.py
-│   └── test_wechat_article_agent_run.py
+│   ├── test_wechat_article_agent_run.py
+│   └── test_wechat_article_qa_integration.py
 ├── memory/
 │   ├── covered-topics.json
 │   └── source-quality.json
@@ -268,7 +289,26 @@ python -u tests/test_wechat_article_agent_run.py \
 
 这里的 Python 脚本不是公众号写稿程序。真正写公众号内容的是 Hermes 里的 `WeChatArticleAgent`；Python 只负责调度、传参、校验和记录日志。
 
-### 6. 可选：创建微信公众号后台草稿
+### 6. 可选：生成产品机会卡
+
+```bash
+python scripts/run_product_strategy_agent.py \
+  --report-label <generated-report-dir>
+```
+
+这个命令会：
+
+- 读取 `reports/<generated-report-dir>/technical-report.md`、`brief.json` 和 `sources.json`。
+- 如果存在，也读取 `articles/<generated-report-dir>/article.json` 和 `final-wechat-article.md`。
+- 生成 `products/<generated-report-dir>/opportunity-cards.md`。
+- 生成结构化数据 `products/<generated-report-dir>/opportunities.json`。
+- 生成交接元数据 `products/<generated-report-dir>/metadata.json`。
+- 固定包含真实产品 `ClawMax`，并把其他探索方向明确标记为假想产品。
+- 把用户画像、选题转化率信号、阅读数据回流、标题 A/B 测试、投放策略、商业化机会和内容产品矩阵位置作为每张机会卡里的轻量字段。
+
+ProductStrategyAgent 当前不是复杂增长系统，也不会自动投放或自动商业化决策。它只负责把日报和文章包转成可以讨论的产品实验方向。
+
+### 7. 可选：创建微信公众号后台草稿
 
 如果你的公众号已经启用开发者密码，并配置好 IP 白名单，可以把本地文章包提交到公众号后台草稿箱：
 
@@ -297,7 +337,126 @@ python scripts/publish_wechat_article.py \
   --dry-run
 ```
 
-### 7. 查看生成结果
+### 8. 一键运行完整真实流程
+
+根目录脚本会串联真实技术报告、真实公众号文章包、自动 QA、微信后台草稿创建和产品机会卡。它不使用 mock，也不使用 dry-run，会真实调用微信接口创建后台草稿，但不会群发或自动发布：
+
+```bash
+./run_full_real_pipeline.py
+```
+
+指定本次运行 label：
+
+```bash
+./run_full_real_pipeline.py \
+  --label 2026-06-07-real-full-manual \
+  --force
+```
+
+运行前需要确保：
+
+- Hermes profiles / skills 已同步。
+- `WECHAT_MP_APPID` 和 `WECHAT_MP_APPSECRET` 已在当前环境或 `.env.systemd` 中配置。
+- 如果依赖本机代理，`HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY` 指向可用代理，例如 `127.0.0.1:7897`。
+
+成功后会写入：
+
+```text
+reports/<label>/
+articles/<label>-wechat/
+products/<label>/
+runs/<label>-full-real-pipeline.json
+```
+
+### 9. 每天早上 6 点自动运行
+
+本项目提供 systemd user timer 模板，用于每天 06:00 自动执行完整真实流程：
+
+```text
+systemd/clawmax-daily-real-pipeline.service
+systemd/clawmax-daily-real-pipeline.timer
+.env.systemd.example
+```
+
+#### 9.1 准备本地环境变量文件
+
+复制示例文件：
+
+```bash
+cp .env.systemd.example .env.systemd
+chmod 600 .env.systemd
+```
+
+编辑 `.env.systemd`，填入真实值：
+
+```bash
+WECHAT_MP_APPID=你的公众号appid
+WECHAT_MP_APPSECRET=你的公众号secret
+HTTP_PROXY=http://127.0.0.1:7897
+HTTPS_PROXY=http://127.0.0.1:7897
+ALL_PROXY=socks5://127.0.0.1:7897
+```
+
+`.env.systemd` 不要提交到 git。`.gitignore` 已经忽略 `.env.*`。
+
+#### 9.2 安装 systemd user service 和 timer
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp systemd/clawmax-daily-real-pipeline.service ~/.config/systemd/user/
+cp systemd/clawmax-daily-real-pipeline.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now clawmax-daily-real-pipeline.timer
+```
+
+确认 timer 已启用：
+
+```bash
+systemctl --user list-timers --all | grep clawmax
+```
+
+#### 9.3 允许退出登录后继续运行
+
+如果希望机器开着但用户不登录时也能在早上 6 点运行，启用 linger：
+
+```bash
+sudo loginctl enable-linger "$USER"
+loginctl show-user "$USER" -p Linger
+```
+
+期望输出：
+
+```text
+Linger=yes
+```
+
+#### 9.4 手动触发一次真实定时任务
+
+下面命令会真实运行完整流程，并创建微信后台草稿：
+
+```bash
+systemctl --user start clawmax-daily-real-pipeline.service
+```
+
+查看状态：
+
+```bash
+systemctl --user status clawmax-daily-real-pipeline.service
+```
+
+查看日志：
+
+```bash
+tail -f runs/systemd-daily-pipeline.log
+```
+
+禁用自动运行：
+
+```bash
+systemctl --user disable --now clawmax-daily-real-pipeline.timer
+```
+
+### 10. 查看生成结果
 
 ```bash
 sed -n '1,160p' articles/<generated-report-dir>/final-wechat-article.md
@@ -343,6 +502,37 @@ python -u tests/test_wechat_article_agent_run.py \
 
 这个脚本使用 `wechatarticleagent` profile 调用另一个公众号 Agent。Python 只负责选择输入报告、传入本次运行参数、校验 `wechat-draft.md` / `final-wechat-article.md` / `wechat-preview.html` / `article.json` / `metadata.json` / `image-assets.json`、写入运行日志；公众号正文和结构化数据由 WeChatArticleAgent 生成，最终 Markdown、HTML 预览和图片包由后处理脚本稳定产出。
 
+### 自动 QA 检查公众号文章包
+
+在生成 `articles/<label>/` 后，可以先运行第一期自动 QA。它只做本地文件、结构、图片和基础内容规则检查，不调用微信 API，也不会发布：
+
+```bash
+python scripts/qa_article_bundle.py --article-label <label>
+```
+
+例如：
+
+```bash
+python scripts/qa_article_bundle.py --article-label 2026-05-29-real-test-151007-wechat
+```
+
+脚本会写入：
+
+```text
+articles/<label>/qa-report.json
+articles/<label>/review-notes.md
+```
+
+如果发现阻断错误，命令返回非 0；如果只有风格类警告，命令返回 0，但 `status=passed_with_warnings`。当前 QA 覆盖：
+
+- 必备文件是否存在：`article.json`、`metadata.json`、`image-assets.json`、`final-wechat-article.md`、`wechat-preview.html`、`wechat-draft.md`。
+- `article.json` / `metadata.json` / `image-assets.json` 是否合法并互相一致。
+- 是否至少 5 张 saved 本地图片、至少 3 张 source-derived 图片、至少 1 张真实 `image_generate` AI 位图。
+- 是否禁止 generated SVG placeholder、是否限制 cover-like 图片数量。
+- Markdown / HTML 图片路径和本地文件是否能对上。
+- `auto_publish_eligible` 和 `metadata.auto_publish` 是否仍为 `false`。
+- 是否缺少 `AI 前沿`、`浪里淘金`、`参考与信息来源`，是否存在明显报告腔或夸大词。
+
 ### 创建微信公众号后台草稿
 
 ```bash
@@ -361,6 +551,14 @@ python scripts/publish_wechat_article.py \
 ```
 
 该脚本会强制微信 API 请求不走代理，避免代理出口 IP 轮换导致微信公众号 IP 白名单错误。
+
+### 运行完整真实流程
+
+会真实调用微信接口创建公众号后台草稿，不使用 mock 或 dry-run：
+
+```bash
+./run_full_real_pipeline.py --label <run-label> --force
+```
 
 ### 运行 mock 工程烟测
 
@@ -558,9 +756,9 @@ python -u tests/test_technical_report_agent_run.py --timeout 540
 
 ```bash
 git status --short
-python -m py_compile scripts/install_hermes_profiles.py scripts/finalize_wechat_article.py scripts/publish_wechat_article.py tests/test_technical_report_agent_run.py tests/test_wechat_article_agent_run.py tests/test_finalize_wechat_article.py tests/test_publish_wechat_article.py
+python -m py_compile run_full_real_pipeline.py scripts/install_hermes_profiles.py scripts/finalize_wechat_article.py scripts/publish_wechat_article.py scripts/qa_article_bundle.py tests/test_technical_report_agent_run.py tests/test_wechat_article_agent_run.py tests/test_finalize_wechat_article.py tests/test_publish_wechat_article.py tests/test_qa_article_bundle.py tests/test_full_real_pipeline.py
 python tests/test_finalize_wechat_article.py
-python -m pytest tests/test_publish_wechat_article.py -q -o 'addopts='
+python -m pytest tests/test_publish_wechat_article.py tests/test_qa_article_bundle.py -q -o 'addopts='
 python scripts/install_hermes_profiles.py --dry-run --configure-from-default
 ```
 

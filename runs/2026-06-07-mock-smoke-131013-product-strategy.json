@@ -1,0 +1,15 @@
+{
+  "run_id": "2026-06-07-mock-smoke-131013-product-strategy",
+  "status": "completed",
+  "label": "2026-06-07-mock-smoke-131013",
+  "output_dir": "products/2026-06-07-mock-smoke-131013",
+  "outputs": {
+    "opportunity_cards": "products/2026-06-07-mock-smoke-131013/opportunity-cards.md",
+    "opportunities_json": "products/2026-06-07-mock-smoke-131013/opportunities.json",
+    "metadata": "products/2026-06-07-mock-smoke-131013/metadata.json"
+  },
+  "opportunity_count": 4,
+  "real_count": 1,
+  "hypothetical_count": 3,
+  "finished_at": "2026-06-07T06:09:29.930041+00:00"
+}

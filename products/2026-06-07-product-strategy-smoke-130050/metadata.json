@@ -1,0 +1,18 @@
+{
+  "label": "2026-06-07-product-strategy-smoke-130050",
+  "generated_at": "2026-06-07T05:01:44.231974+00:00",
+  "generator_profile": "productstrategyagent",
+  "skills": [
+    "clawmax:product-opportunity-analysis",
+    "clawmax:daily-ai-media-pipeline"
+  ],
+  "mode": "lightweight_deterministic_strategy_scan",
+  "source_report": "reports/2026-06-07-product-strategy-smoke-130050/technical-report.md",
+  "source_article_dir": "articles/2026-06-07-product-strategy-smoke-130050",
+  "outputs": {
+    "opportunity_cards": "products/2026-06-07-product-strategy-smoke-130050/opportunity-cards.md",
+    "opportunities_json": "products/2026-06-07-product-strategy-smoke-130050/opportunities.json",
+    "metadata": "products/2026-06-07-product-strategy-smoke-130050/metadata.json"
+  },
+  "notes": "ClawMax is the real product. Other opportunities are hypothetical starter cards for review."
+}
