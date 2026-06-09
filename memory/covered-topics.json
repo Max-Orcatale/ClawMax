@@ -1,5 +1,15 @@
 [
   {
+    "topic": "EVA-Bench Data 2.0 用 121 个工具和 213 个场景评测企业 agent",
+    "first_covered_at": "2026-06-09T16:20:03+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-09T16:20:03+08:00",
+    "last_output_label": "2026-06-09-real-full-160525",
+    "last_run_id": "2026-06-09-real-full-160525",
+    "last_summary": "本轮滚动窗口显示，AI 前沿焦点从单点模型能力转向 agent 环境/评测基础设施、实时多模态产品演示、具身辅助应用，以及大型 AI 公司治理和长期记忆机制。报告使用 12 个真实来源，保存 10 个 source-derived visual assets，未使用 mock 或 AI 生成图片。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "Google Gemini 3.5 / Gemini Omni 强化 action 与多模态产品化",
     "first_covered_at": "2026-06-02T07:28:07+08:00",
     "covered_count": 1,
@@ -7,6 +17,16 @@
     "last_output_label": "2026-06-02-real-test-071617",
     "last_run_id": "2026-06-02-real-test-071617",
     "last_summary": "近期 AI 前沿从单点模型能力转向可执行系统、治理评估和具身/多模态落地。OpenAI 强调第三方评估与治理框架，Google 强化 Gemini 的 action/multimodal 产品化，NVIDIA Cosmos 3 与 Reachy Mini 推动 physical AI 和本地机器人交互，GrepSeek",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "Google 通过 Gemini Omni / Gemini 3.5 demos 强化实时多模态产品叙事",
+    "first_covered_at": "2026-06-09T16:20:03+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-09T16:20:03+08:00",
+    "last_output_label": "2026-06-09-real-full-160525",
+    "last_run_id": "2026-06-09-real-full-160525",
+    "last_summary": "本轮滚动窗口显示，AI 前沿焦点从单点模型能力转向 agent 环境/评测基础设施、实时多模态产品演示、具身辅助应用，以及大型 AI 公司治理和长期记忆机制。报告使用 12 个真实来源，保存 10 个 source-derived visual assets，未使用 mock 或 AI 生成图片。",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
@@ -50,6 +70,26 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "OpenAI 近期更新集中在治理、经济影响研究和 ChatGPT memory",
+    "first_covered_at": "2026-06-09T16:20:03+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-09T16:20:03+08:00",
+    "last_output_label": "2026-06-09-real-full-160525",
+    "last_run_id": "2026-06-09-real-full-160525",
+    "last_summary": "本轮滚动窗口显示，AI 前沿焦点从单点模型能力转向 agent 环境/评测基础设施、实时多模态产品演示、具身辅助应用，以及大型 AI 公司治理和长期记忆机制。报告使用 12 个真实来源，保存 10 个 source-derived visual assets，未使用 mock 或 AI 生成图片。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "OpenEnv 获 Hugging Face 社区支持，Agentic RL 需要开放环境栈",
+    "first_covered_at": "2026-06-09T16:20:03+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-09T16:20:03+08:00",
+    "last_output_label": "2026-06-09-real-full-160525",
+    "last_run_id": "2026-06-09-real-full-160525",
+    "last_summary": "本轮滚动窗口显示，AI 前沿焦点从单点模型能力转向 agent 环境/评测基础设施、实时多模态产品演示、具身辅助应用，以及大型 AI 公司治理和长期记忆机制。报告使用 12 个真实来源，保存 10 个 source-derived visual assets，未使用 mock 或 AI 生成图片。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "Physical AI 进入模型、数据、机器人硬件联动阶段",
     "first_covered_at": "2026-06-02T17:33:37+08:00",
     "covered_count": 1,
@@ -67,6 +107,16 @@
     "last_output_label": "2026-06-02-real-test-071617",
     "last_run_id": "2026-06-02-real-test-071617",
     "last_summary": "近期 AI 前沿从单点模型能力转向可执行系统、治理评估和具身/多模态落地。OpenAI 强调第三方评估与治理框架，Google 强化 Gemini 的 action/multimodal 产品化，NVIDIA Cosmos 3 与 Reachy Mini 推动 physical AI 和本地机器人交互，GrepSeek",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "Running Guide agent 展示辅助型具身 AI 的现实应用路径",
+    "first_covered_at": "2026-06-09T16:20:03+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-09T16:20:03+08:00",
+    "last_output_label": "2026-06-09-real-full-160525",
+    "last_run_id": "2026-06-09-real-full-160525",
+    "last_summary": "本轮滚动窗口显示，AI 前沿焦点从单点模型能力转向 agent 环境/评测基础设施、实时多模态产品演示、具身辅助应用，以及大型 AI 公司治理和长期记忆机制。报告使用 12 个真实来源，保存 10 个 source-derived visual assets，未使用 mock 或 AI 生成图片。",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
@@ -97,6 +147,16 @@
     "last_output_label": "2026-06-02-real-test-171928",
     "last_run_id": "2026-06-02-real-test-171928",
     "last_summary": "本轮真实来源报告覆盖 12 个近期高质量来源。主要趋势包括 Physical AI 从模型发布走向数据合成和本地机器人交互，agent 生态从工具调用走向长程、流式、可治理运行时，AI infra 围绕 vLLM、Transformers 和专用代码模型继续快速迭代。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "vLLM 与 SGLang 仍是开源推理基础设施竞争区",
+    "first_covered_at": "2026-06-09T16:20:03+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-09T16:20:03+08:00",
+    "last_output_label": "2026-06-09-real-full-160525",
+    "last_run_id": "2026-06-09-real-full-160525",
+    "last_summary": "本轮滚动窗口显示，AI 前沿焦点从单点模型能力转向 agent 环境/评测基础设施、实时多模态产品演示、具身辅助应用，以及大型 AI 公司治理和长期记忆机制。报告使用 12 个真实来源，保存 10 个 source-derived visual assets，未使用 mock 或 AI 生成图片。",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {

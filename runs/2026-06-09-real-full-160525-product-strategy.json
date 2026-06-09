@@ -1,0 +1,15 @@
+{
+  "run_id": "2026-06-09-real-full-160525-product-strategy",
+  "status": "completed",
+  "label": "2026-06-09-real-full-160525",
+  "output_dir": "products/2026-06-09-real-full-160525",
+  "outputs": {
+    "opportunity_cards": "products/2026-06-09-real-full-160525/opportunity-cards.md",
+    "opportunities_json": "products/2026-06-09-real-full-160525/opportunities.json",
+    "metadata": "products/2026-06-09-real-full-160525/metadata.json"
+  },
+  "opportunity_count": 4,
+  "real_count": 1,
+  "hypothetical_count": 3,
+  "finished_at": "2026-06-09T08:33:33.897128+00:00"
+}

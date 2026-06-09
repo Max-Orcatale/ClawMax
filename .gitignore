@@ -3,6 +3,7 @@
 *.env
 .env
 .env.*
+!.env.systemd.example
 
 # Generated reports and articles
 reports/*

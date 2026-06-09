@@ -27,14 +27,9 @@
 - profile / skill / runtime env 同步流程：`profiles/profiles.yaml` 声明本地运行所需 env key，`scripts/install_hermes_profiles.py --configure-from-default` 从默认 Hermes `.env` 同步到 profile runtime。
 - 集成测试、mock 测试和运行日志。
 
-未完成：
+注意：
 
 - 每日 6 点定时调度模板已提供，但需要在目标机器上手动复制、启用 timer，并填写本地 `.env.systemd`。
-- 微信后台自动发布 / 群发。当前只允许创建草稿，`auto_publish=false`。
-- 更复杂的公众号排版系统、发布前视觉 QA 和草稿自动回读校验。
-- 更完整的增长数据、阅读数据自动回流、投放执行和商业化分析闭环。
-
-当前仓库处于“真实来源日报、公众号文章包、微信公众号后台草稿创建均已跑通；每日 6 点定时器模板已提供但尚需本机启用；自动发布尚未接入”的阶段。
 
 ## 项目架构
 
@@ -380,12 +375,15 @@ systemd/clawmax-daily-real-pipeline.timer
 
 #### 9.1 准备本地环境变量文件
 
-复制示例文件：
+复制示例文件并设置权限：
 
 ```bash
+cd /home/max-orca/Max_workspace/Programs/ClawMax
 cp .env.systemd.example .env.systemd
 chmod 600 .env.systemd
 ```
+
+如果你已经在默认 Hermes 环境里填过公众号凭据，可以从 `/home/max-orca/.hermes/.env` 复制 `WECHAT_MP_APPID` 和 `WECHAT_MP_APPSECRET` 到 `.env.systemd`，不要把 secret 提交到 git。
 
 编辑 `.env.systemd`，填入真实值：
 
@@ -397,7 +395,7 @@ HTTPS_PROXY=http://127.0.0.1:7897
 ALL_PROXY=socks5://127.0.0.1:7897
 ```
 
-`.env.systemd` 不要提交到 git。`.gitignore` 已经忽略 `.env.*`。
+`.env.systemd` 不要提交到 git。`.gitignore` 会忽略真实 `.env.*` 文件，但通过 `!.env.systemd.example` 保留可提交的示例模板。
 
 #### 9.2 安装 systemd user service 和 timer
 
@@ -470,7 +468,6 @@ python -m json.tool articles/<generated-report-dir>/metadata.json | sed -n '1,16
 less articles/<generated-report-dir>/final-wechat-article.md
 xdg-open articles/<generated-report-dir>/wechat-preview.html 2>/dev/null || true
 ```
-
 
 ## 常用命令
 

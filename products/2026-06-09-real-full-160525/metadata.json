@@ -1,0 +1,19 @@
+{
+  "label": "2026-06-09-real-full-160525",
+  "article_label": "2026-06-09-real-full-160525-wechat",
+  "generated_at": "2026-06-09T08:33:33.895101+00:00",
+  "generator_profile": "productstrategyagent",
+  "skills": [
+    "clawmax:product-opportunity-analysis",
+    "clawmax:daily-ai-media-pipeline"
+  ],
+  "mode": "lightweight_deterministic_strategy_scan",
+  "source_report": "reports/2026-06-09-real-full-160525/technical-report.md",
+  "source_article_dir": "articles/2026-06-09-real-full-160525-wechat",
+  "outputs": {
+    "opportunity_cards": "products/2026-06-09-real-full-160525/opportunity-cards.md",
+    "opportunities_json": "products/2026-06-09-real-full-160525/opportunities.json",
+    "metadata": "products/2026-06-09-real-full-160525/metadata.json"
+  },
+  "notes": "ClawMax is the real product. Other opportunities are hypothetical starter cards for review."
+}

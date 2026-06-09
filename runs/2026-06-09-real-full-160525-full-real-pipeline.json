@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-06-09-real-full-160525-full-real-pipeline",
+  "status": "failed",
+  "mode": "full_real_pipeline",
+  "started_at": "2026-06-09T16:05:55+08:00",
+  "report_label": "2026-06-09-real-full-160525",
+  "article_label": "2026-06-09-real-full-160525-wechat",
+  "steps": [
+    {
+      "name": "technical_report",
+      "status": "completed",
+      "finished_at": "2026-06-09T16:20:03+08:00"
+    },
+    {
+      "name": "wechat_article_and_qa",
+      "status": "completed",
+      "finished_at": "2026-06-09T16:31:56+08:00"
+    }
+  ],
+  "commands": {
+    "technical_report": "/home/max-orca/anaconda3/bin/python3 tests/test_technical_report_agent_run.py --output-label 2026-06-09-real-full-160525 --timeout 1800",
+    "wechat_article": "/home/max-orca/anaconda3/bin/python3 tests/test_wechat_article_agent_run.py --report-label 2026-06-09-real-full-160525 --output-label 2026-06-09-real-full-160525-wechat --timeout 2400",
+    "wechat_draft": "/home/max-orca/anaconda3/bin/python3 scripts/publish_wechat_article.py --article-label 2026-06-09-real-full-160525-wechat --mode draft --author ClawMax",
+    "product_strategy": "/home/max-orca/anaconda3/bin/python3 scripts/run_product_strategy_agent.py --report-label 2026-06-09-real-full-160525 --article-label 2026-06-09-real-full-160525-wechat"
+  },
+  "outputs": {},
+  "finished_at": "2026-06-09T16:31:56+08:00",
+  "error": "3/4 live WeChat backend draft creation failed with exit code 2"
+}
