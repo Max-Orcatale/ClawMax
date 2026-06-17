@@ -11,176 +11,7 @@
 - `runs/` 保存每次日报生成的运行日志。
 - `reports/`、`articles/` 和 `products/` 分别保存技术报告、公众号草稿产物和产品机会卡。
 
-## 当前完成情况
 
-已完成：
-
-- TechnicalReportAgent 的人格、skills 和本地同步流程。
-- 真实来源 AI 技术报告生成链路，输出 `technical-report.md`、`sources.json`、`brief.json`、报告图片清单和运行日志。
-- WeChatArticleAgent 的公众号文章包生成链路，输出 `wechat-draft.md`、`final-wechat-article.md`、`wechat-preview.html`、`article.json`、`metadata.json`、`image-assets.json` 和 `images/`。
-- 公众号文章图片约束：至少 5 张本地图片，其中至少 3 张信源/官方/截图类图片，至少 1 张真实 `image_generate` AI 位图。
-- 公众号文章包自动 QA：输出 `qa-report.json` 和 `review-notes.md`，失败时阻断生成流程。
-- ProductStrategyAgent 的轻量产品机会卡链路，输出 `products/<label>/opportunity-cards.md`、`opportunities.json` 和 `metadata.json`。
-- 微信公众号官方 API 草稿创建脚本：可以上传正文图片、上传封面素材、调用 `draft/add` 创建后台草稿，并写入 `wechat-publish.json`。
-- 根目录全真实流水线脚本：`run_full_real_pipeline.py`，串联真实技术报告、真实公众号文章包、自动 QA、微信后台草稿创建和产品机会卡。
-- 每日 6 点 systemd user timer 模板：`systemd/clawmax-daily-real-pipeline.service` 和 `systemd/clawmax-daily-real-pipeline.timer`。
-- profile / skill / runtime env 同步流程：`profiles/profiles.yaml` 声明本地运行所需 env key，`scripts/install_hermes_profiles.py --configure-from-default` 从默认 Hermes `.env` 同步到 profile runtime。
-- 集成测试、mock 测试和运行日志。
-
-注意：
-
-- 每日 6 点定时调度模板已提供，但需要在目标机器上手动复制、启用 timer，并填写本地 `.env.systemd`。
-
-## 项目架构
-
-```text
-Scheduler / 手动运行
-↓
-TechnicalReportAgent
-↓
-真实来源检索 + 资料整理 + 专业技术报告生成
-↓
-reports/<run-label>/
-↓
-WeChatArticleAgent
-↓
-公众号文章包生成 + 图片包 + 本地 HTML 预览
-↓
-articles/<run-label>/
-↓
-ProductStrategyAgent（可选）
-↓
-products/<run-label>/opportunity-cards.md
-↓
-scripts/publish_wechat_article.py
-↓
-微信公众号官方 API：上传图片 + 创建草稿
-↓
-人工审阅 / 手动发布
-```
-
-第一阶段默认不做自动发布或群发。项目可以通过官方 API 创建微信公众号后台草稿，但最终发布仍需人工审阅。
-
-## 目录结构
-
-```text
-.
-├── README.md
-├── AGENTS.md
-├── config.yaml
-├── run_full_real_pipeline.py
-├── .env.systemd.example
-├── profiles/
-│   ├── profiles.yaml
-│   ├── technical-report-agent.md
-│   ├── wechat-article-agent.md
-│   └── product-strategy-agent.md
-├── skills/
-│   ├── ai-technical-report/
-│   ├── daily-ai-media-pipeline/
-│   ├── product-opportunity-analysis/
-│   └── wechat-article-drafting/
-├── scripts/
-│   ├── collect_source_images.py
-│   ├── finalize_wechat_article.py
-│   ├── install_hermes_profiles.py
-│   ├── publish_wechat_article.py
-│   ├── qa_article_bundle.py
-│   └── run_product_strategy_agent.py
-├── systemd/
-│   ├── clawmax-daily-real-pipeline.service
-│   └── clawmax-daily-real-pipeline.timer
-├── tests/
-│   ├── test_finalize_wechat_article.py
-│   ├── test_full_real_pipeline.py
-│   ├── test_product_strategy_agent_run.py
-│   ├── test_publish_wechat_article.py
-│   ├── test_qa_article_bundle.py
-│   ├── test_technical_report_agent_run.py
-│   ├── test_wechat_article_agent_run.py
-│   └── test_wechat_article_qa_integration.py
-├── memory/
-│   ├── covered-topics.json
-│   └── source-quality.json
-├── runs/
-│   ├── .gitkeep
-│   ├── daily-report-runs.jsonl
-│   └── <run-id>.json
-├── reports/
-└── articles/
-```
-
-## 核心概念
-
-### profiles：谁来做
-
-`profiles/` 是项目中的 Agent 人格源文件。
-
-例如：
-
-- `profiles/technical-report-agent.md`：每日 AI 技术报告 Agent。
-- `profiles/wechat-article-agent.md`：微信公众号草稿 Agent。
-- `profiles/profiles.yaml`：声明项目 profile 如何安装到本地 Hermes runtime。
-
-同步后，Hermes 会把这些 profile 安装到：
-
-```text
-~/.hermes/profiles/<profile-name>/SOUL.md
-```
-
-注意：`SOUL.md` 不是项目里的公用人格文件，而是 Hermes 每个 runtime profile 默认读取的入口文件名。项目源文件仍然是 `profiles/*.md`。
-
-### skills：怎么做
-
-`skills/` 是项目 SOP 源文件。
-
-例如：
-
-- `skills/ai-technical-report/SKILL.md`：如何生成专业技术报告。
-- `skills/wechat-article-drafting/SKILL.md`：如何把技术报告改写成公众号草稿。
-- `skills/daily-ai-media-pipeline/SKILL.md`：如何串联日报和公众号流程。
-
-同步后，这些 skills 会安装到本地 Hermes runtime：
-
-```text
-~/.hermes/skills/clawmax/<skill-name>/
-~/.hermes/profiles/<profile-name>/skills/clawmax/<skill-name>/
-```
-
-### 项目级 memory：业务状态
-
-Hermes 本身有持久记忆功能，适合保存用户偏好、环境经验和通用工作习惯。ClawMax 另外维护项目级 `memory/`，用于保存可审计、可提交、团队共享的业务状态。
-
-当前项目记忆包括：
-
-- `memory/covered-topics.json`：记录已经报道过的话题、最后报道时间、重复报道策略。用于判断某个 AI 话题是否需要再次进入日报。
-- `memory/source-quality.json`：记录来源站点的出现次数、置信度分布和标签。用于后续优化检索优先级与失败兜底。
-
-两者不要混用：
-
-- 用户偏好、Hermes 使用经验：写入 Hermes 记忆。
-- ClawMax 的报道历史、来源质量、运行状态：写入项目 `memory/` 和 `runs/`。
-
-### runs：运行日志
-
-`runs/` 保存每次日报生成的结构化运行日志：
-
-- `runs/daily-report-runs.jsonl`：追加式总日志。
-- `runs/<run-id>.json`：单次运行详情。
-
-日志包含运行模式、profile、skills、输出文件、耗时、来源数量、更新了多少项目记忆，以及 Hermes 子进程继承了哪些代理环境变量。
-
-### prompt：本次运行参数
-
-测试脚本和手动运行时会通过 `hermes chat -q "..."` 传入一次性的运行参数，例如：
-
-- 本次使用哪个 profile
-- 本次加载哪些 skills
-- 本次是 real sources 还是 mock smoke test
-- 本次输出到哪个目录
-- 本次的检索预算
-
-这些参数只描述“这一次任务怎么跑”，不应该替代人格文件或 SOP。长期质量标准必须放在 `profiles/` 和 `skills/` 中。
 
 ## Quickstart
 
@@ -303,7 +134,7 @@ python scripts/run_product_strategy_agent.py \
 
 ProductStrategyAgent 当前不是复杂增长系统，也不会自动投放或自动商业化决策。它只负责把日报和文章包转成可以讨论的产品实验方向。
 
-### 7. 可选：创建微信公众号后台草稿
+### 7. 创建微信公众号后台草稿
 
 如果你的公众号已经启用开发者密码，并配置好 IP 白名单，可以把本地文章包提交到公众号后台草稿箱：
 
@@ -468,6 +299,158 @@ python -m json.tool articles/<generated-report-dir>/metadata.json | sed -n '1,16
 less articles/<generated-report-dir>/final-wechat-article.md
 xdg-open articles/<generated-report-dir>/wechat-preview.html 2>/dev/null || true
 ```
+
+
+## 项目架构
+
+```text
+Scheduler / 手动运行
+↓
+TechnicalReportAgent
+↓
+真实来源检索 + 资料整理 + 专业技术报告生成
+↓
+reports/<run-label>/
+↓
+WeChatArticleAgent
+↓
+公众号文章包生成 + 图片包 + 本地 HTML 预览
+↓
+articles/<run-label>/
+↓
+ProductStrategyAgent（可选）
+↓
+products/<run-label>/opportunity-cards.md
+↓
+scripts/publish_wechat_article.py
+↓
+微信公众号官方 API：上传图片 + 创建草稿
+↓
+人工审阅 / 手动发布
+```
+
+第一阶段默认不做自动发布或群发。项目可以通过官方 API 创建微信公众号后台草稿，但最终发布仍需人工审阅。
+
+## 目录结构
+
+```text
+.
+├── README.md
+├── AGENTS.md
+├── config.yaml
+├── run_full_real_pipeline.py
+├── .env.systemd.example
+├── profiles/
+│   ├── profiles.yaml
+│   ├── technical-report-agent.md
+│   ├── wechat-article-agent.md
+│   └── product-strategy-agent.md
+├── skills/
+│   ├── ai-technical-report/
+│   ├── daily-ai-media-pipeline/
+│   ├── product-opportunity-analysis/
+│   └── wechat-article-drafting/
+├── scripts/
+│   ├── collect_source_images.py
+│   ├── finalize_wechat_article.py
+│   ├── install_hermes_profiles.py
+│   ├── publish_wechat_article.py
+│   ├── qa_article_bundle.py
+│   └── run_product_strategy_agent.py
+├── systemd/
+│   ├── clawmax-daily-real-pipeline.service
+│   └── clawmax-daily-real-pipeline.timer
+├── tests/
+│   ├── test_finalize_wechat_article.py
+│   ├── test_full_real_pipeline.py
+│   ├── test_product_strategy_agent_run.py
+│   ├── test_publish_wechat_article.py
+│   ├── test_qa_article_bundle.py
+│   ├── test_technical_report_agent_run.py
+│   ├── test_wechat_article_agent_run.py
+│   └── test_wechat_article_qa_integration.py
+├── memory/
+│   ├── covered-topics.json
+│   └── source-quality.json
+├── runs/
+│   ├── .gitkeep
+│   ├── daily-report-runs.jsonl
+│   └── <run-id>.json
+├── reports/
+└── articles/
+```
+
+## 核心概念
+
+### profiles：谁来做
+
+`profiles/` 是项目中的 Agent 人格源文件。
+
+例如：
+
+- `profiles/technical-report-agent.md`：每日 AI 技术报告 Agent。
+- `profiles/wechat-article-agent.md`：微信公众号草稿 Agent。
+- `profiles/profiles.yaml`：声明项目 profile 如何安装到本地 Hermes runtime。
+
+同步后，Hermes 会把这些 profile 安装到：
+
+```text
+~/.hermes/profiles/<profile-name>/SOUL.md
+```
+
+注意：`SOUL.md` 不是项目里的公用人格文件，而是 Hermes 每个 runtime profile 默认读取的入口文件名。项目源文件仍然是 `profiles/*.md`。
+
+### skills：怎么做
+
+`skills/` 是项目 SOP 源文件。
+
+例如：
+
+- `skills/ai-technical-report/SKILL.md`：如何生成专业技术报告。
+- `skills/wechat-article-drafting/SKILL.md`：如何把技术报告改写成公众号草稿。
+- `skills/daily-ai-media-pipeline/SKILL.md`：如何串联日报和公众号流程。
+
+同步后，这些 skills 会安装到本地 Hermes runtime：
+
+```text
+~/.hermes/skills/clawmax/<skill-name>/
+~/.hermes/profiles/<profile-name>/skills/clawmax/<skill-name>/
+```
+
+### 项目级 memory：业务状态
+
+Hermes 本身有持久记忆功能，适合保存用户偏好、环境经验和通用工作习惯。ClawMax 另外维护项目级 `memory/`，用于保存可审计、可提交、团队共享的业务状态。
+
+当前项目记忆包括：
+
+- `memory/covered-topics.json`：记录已经报道过的话题、最后报道时间、重复报道策略。用于判断某个 AI 话题是否需要再次进入日报。
+- `memory/source-quality.json`：记录来源站点的出现次数、置信度分布和标签。用于后续优化检索优先级与失败兜底。
+
+两者不要混用：
+
+- 用户偏好、Hermes 使用经验：写入 Hermes 记忆。
+- ClawMax 的报道历史、来源质量、运行状态：写入项目 `memory/` 和 `runs/`。
+
+### runs：运行日志
+
+`runs/` 保存每次日报生成的结构化运行日志：
+
+- `runs/daily-report-runs.jsonl`：追加式总日志。
+- `runs/<run-id>.json`：单次运行详情。
+
+日志包含运行模式、profile、skills、输出文件、耗时、来源数量、更新了多少项目记忆，以及 Hermes 子进程继承了哪些代理环境变量。
+
+### prompt：本次运行参数
+
+测试脚本和手动运行时会通过 `hermes chat -q "..."` 传入一次性的运行参数，例如：
+
+- 本次使用哪个 profile
+- 本次加载哪些 skills
+- 本次是 real sources 还是 mock smoke test
+- 本次输出到哪个目录
+- 本次的检索预算
+
+这些参数只描述“这一次任务怎么跑”，不应该替代人格文件或 SOP。长期质量标准必须放在 `profiles/` 和 `skills/` 中。
 
 ## 常用命令
 
@@ -734,38 +717,6 @@ articles/YYYY-MM-DD-or-report-label/
 - 不要提交 `.env`、API key、token、cookie 或任何密钥。
 - 真实模型配置应保存在本地 Hermes runtime 中。
 - 修改 `profiles/` 或 `skills/` 后，需要重新运行同步脚本。
-
-## 推荐开发流程
-
-```text
-修改 profiles/ 或 skills/
-↓
-python scripts/install_hermes_profiles.py --configure-from-default
-↓
-python -u tests/test_technical_report_agent_run.py --timeout 540
-↓
-检查 reports/YYYY-MM-DD-real-test-HHMMSS/
-↓
-确认质量后再进入公众号草稿阶段
-```
-
-## 上传前检查
-
-```bash
-git status --short
-python -m py_compile run_full_real_pipeline.py scripts/install_hermes_profiles.py scripts/finalize_wechat_article.py scripts/publish_wechat_article.py scripts/qa_article_bundle.py tests/test_technical_report_agent_run.py tests/test_wechat_article_agent_run.py tests/test_finalize_wechat_article.py tests/test_publish_wechat_article.py tests/test_qa_article_bundle.py tests/test_full_real_pipeline.py
-python tests/test_finalize_wechat_article.py
-python -m pytest tests/test_publish_wechat_article.py tests/test_qa_article_bundle.py -q -o 'addopts='
-python scripts/install_hermes_profiles.py --dry-run --configure-from-default
-```
-
-确认没有提交：
-
-- `.env`
-- API key / token / cookie
-- 本地 `~/.hermes/` 内容
-- 不希望公开的 `reports/` 或 `articles/` 产物
-- `wechat-publish.json` 中的草稿 media_id 如果不希望公开，也不要提交
 
 ## 进一步阅读
 
