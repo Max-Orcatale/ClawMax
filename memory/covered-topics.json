@@ -1,5 +1,45 @@
 [
   {
+    "topic": "APPO and World Pilot papers",
+    "first_covered_at": "2026-06-12T08:31:26+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-12T08:31:26+08:00",
+    "last_output_label": "2026-06-12-real-full-081903",
+    "last_run_id": "2026-06-12-real-full-081903",
+    "last_summary": "本日报基于 12 条真实来源，判断近期 AI 前沿的主线从模型能力宣传转向 agent 工程化：GitHub Copilot CLI 引入 LSP 与 custom agents，OpenAI Codex 进入云采购和科研案例，Hugging Face 推动 OpenEnv 与 agent-optimized CLI，",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "Copilot CLI 引入 language servers 作为代码语义基础",
+    "first_covered_at": "2026-06-13T09:42:29+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-13T09:42:29+08:00",
+    "last_output_label": "2026-06-13-real-full-093347",
+    "last_run_id": "2026-06-13-real-full-093347",
+    "last_summary": "本报告基于 12 条真实来源，覆盖 OpenAI 企业工作流与云采购动作、GitHub Copilot CLI 的 agent 编排与 LSP 语义增强、Google Gemini 产品化演示、Hugging Face / AllenAI 评测工具、OpenEnv agentic RL 环境、arXiv agent 评",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "CubeSandbox 与 InferenceX",
+    "first_covered_at": "2026-06-10T06:13:40+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-10T06:13:40+08:00",
+    "last_output_label": "2026-06-10-real-full-060002",
+    "last_run_id": "2026-06-10-real-full-060002",
+    "last_summary": "本日报基于 12 条近期真实来源，聚焦 Google Gemini 产品化信号、Hugging Face agent 工具生态、agent benchmark/sandbox 基础设施，以及 VLA/游戏 agent/具身仿真的研究与工程进展。整体趋势是 AI 能力从模型展示转向可运行、可评估、可接入工具链的系统工程。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "EVA-Bench Data 2.0 与 OmniGameArena",
+    "first_covered_at": "2026-06-10T06:13:40+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-10T06:13:40+08:00",
+    "last_output_label": "2026-06-10-real-full-060002",
+    "last_run_id": "2026-06-10-real-full-060002",
+    "last_summary": "本日报基于 12 条近期真实来源，聚焦 Google Gemini 产品化信号、Hugging Face agent 工具生态、agent benchmark/sandbox 基础设施，以及 VLA/游戏 agent/具身仿真的研究与工程进展。整体趋势是 AI 能力从模型展示转向可运行、可评估、可接入工具链的系统工程。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "EVA-Bench Data 2.0 用 121 个工具和 213 个场景评测企业 agent",
     "first_covered_at": "2026-06-09T16:20:03+08:00",
     "covered_count": 1,
@@ -10,6 +50,36 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "Gemini Omni and Gemini 3.5 demos",
+    "first_covered_at": "2026-06-14T08:39:12+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-14T08:39:12+08:00",
+    "last_output_label": "2026-06-14-real-full-082414",
+    "last_run_id": "2026-06-14-real-full-082414",
+    "last_summary": "本期真实来源报告显示，AI 前沿从单点模型发布转向工程化系统竞争：OpenAI 强化 Codex 云端持久环境和企业 adoption，Google 继续推进 Gemini 多模态产品演示，Hugging Face/AllenAI 推动评测工作台和 agentic RL 环境，vLLM/Transformers/Oll",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "GitHub Copilot CLI LSP/custom agents",
+    "first_covered_at": "2026-06-12T08:31:26+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-12T08:31:26+08:00",
+    "last_output_label": "2026-06-12-real-full-081903",
+    "last_run_id": "2026-06-12-real-full-081903",
+    "last_summary": "本日报基于 12 条真实来源，判断近期 AI 前沿的主线从模型能力宣传转向 agent 工程化：GitHub Copilot CLI 引入 LSP 与 custom agents，OpenAI Codex 进入云采购和科研案例，Hugging Face 推动 OpenEnv 与 agent-optimized CLI，",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "GitHub Copilot CLI 更谨慎地进行 delegation",
+    "first_covered_at": "2026-06-13T09:42:29+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-13T09:42:29+08:00",
+    "last_output_label": "2026-06-13-real-full-093347",
+    "last_run_id": "2026-06-13-real-full-093347",
+    "last_summary": "本报告基于 12 条真实来源，覆盖 OpenAI 企业工作流与云采购动作、GitHub Copilot CLI 的 agent 编排与 LSP 语义增强、Google Gemini 产品化演示、Hugging Face / AllenAI 评测工具、OpenEnv agentic RL 环境、arXiv agent 评",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "Google Gemini 3.5 / Gemini Omni 强化 action 与多模态产品化",
     "first_covered_at": "2026-06-02T07:28:07+08:00",
     "covered_count": 1,
@@ -17,6 +87,26 @@
     "last_output_label": "2026-06-02-real-test-071617",
     "last_run_id": "2026-06-02-real-test-071617",
     "last_summary": "近期 AI 前沿从单点模型能力转向可执行系统、治理评估和具身/多模态落地。OpenAI 强调第三方评估与治理框架，Google 强化 Gemini 的 action/multimodal 产品化，NVIDIA Cosmos 3 与 Reachy Mini 推动 physical AI 和本地机器人交互，GrepSeek",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "Google Gemini Omni / Gemini 3.5 demo 与 AI Studio 原型开发",
+    "first_covered_at": "2026-06-17T09:32:02+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-17T09:32:02+08:00",
+    "last_output_label": "2026-06-17-real-full-092233",
+    "last_run_id": "2026-06-17-real-full-092233",
+    "last_summary": "本日报基于 12 条真实来源，覆盖 OpenAI deployment simulation 与企业入口扩展、Google Gemini / AI Studio 的产品化演示、三篇 arXiv 研究进展，以及 LangChain、Langflow、openpilot 等 GitHub 项目的开发者生态信号。核心趋势是 ",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "Google Gemini Omni/Gemini 3.5 demo portfolio",
+    "first_covered_at": "2026-06-10T06:13:40+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-10T06:13:40+08:00",
+    "last_output_label": "2026-06-10-real-full-060002",
+    "last_run_id": "2026-06-10-real-full-060002",
+    "last_summary": "本日报基于 12 条近期真实来源，聚焦 Google Gemini 产品化信号、Hugging Face agent 工具生态、agent benchmark/sandbox 基础设施，以及 VLA/游戏 agent/具身仿真的研究与工程进展。整体趋势是 AI 能力从模型展示转向可运行、可评估、可接入工具链的系统工程。",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
@@ -40,6 +130,46 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "Hugging Face agentic RL 与 agent-friendly CLI",
+    "first_covered_at": "2026-06-10T06:13:40+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-10T06:13:40+08:00",
+    "last_output_label": "2026-06-10-real-full-060002",
+    "last_run_id": "2026-06-10-real-full-060002",
+    "last_summary": "本日报基于 12 条近期真实来源，聚焦 Google Gemini 产品化信号、Hugging Face agent 工具生态、agent benchmark/sandbox 基础设施，以及 VLA/游戏 agent/具身仿真的研究与工程进展。整体趋势是 AI 能力从模型展示转向可运行、可评估、可接入工具链的系统工程。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "LangChain、Langflow 与 openpilot 显示 agent/workflow/具身生态持续活跃",
+    "first_covered_at": "2026-06-17T09:32:02+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-17T09:32:02+08:00",
+    "last_output_label": "2026-06-17-real-full-092233",
+    "last_run_id": "2026-06-17-real-full-092233",
+    "last_summary": "本日报基于 12 条真实来源，覆盖 OpenAI deployment simulation 与企业入口扩展、Google Gemini / AI Studio 的产品化演示、三篇 arXiv 研究进展，以及 LangChain、Langflow、openpilot 等 GitHub 项目的开发者生态信号。核心趋势是 ",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "Mana robotics paper",
+    "first_covered_at": "2026-06-14T08:39:12+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-14T08:39:12+08:00",
+    "last_output_label": "2026-06-14-real-full-082414",
+    "last_run_id": "2026-06-14-real-full-082414",
+    "last_summary": "本期真实来源报告显示，AI 前沿从单点模型发布转向工程化系统竞争：OpenAI 强化 Codex 云端持久环境和企业 adoption，Google 继续推进 Gemini 多模态产品演示，Hugging Face/AllenAI 推动评测工作台和 agentic RL 环境，vLLM/Transformers/Oll",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "MemoryVLA++ 与 Genesis World",
+    "first_covered_at": "2026-06-10T06:13:40+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-10T06:13:40+08:00",
+    "last_output_label": "2026-06-10-real-full-060002",
+    "last_run_id": "2026-06-10-real-full-060002",
+    "last_summary": "本日报基于 12 条近期真实来源，聚焦 Google Gemini 产品化信号、Hugging Face agent 工具生态、agent benchmark/sandbox 基础设施，以及 VLA/游戏 agent/具身仿真的研究与工程进展。整体趋势是 AI 能力从模型展示转向可运行、可评估、可接入工具链的系统工程。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "NVIDIA Cosmos 3 面向 physical AI 的 open omni-model",
     "first_covered_at": "2026-06-02T07:28:07+08:00",
     "covered_count": 1,
@@ -50,6 +180,26 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "North Mini Code and GitHub releases",
+    "first_covered_at": "2026-06-12T08:31:26+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-12T08:31:26+08:00",
+    "last_output_label": "2026-06-12-real-full-081903",
+    "last_run_id": "2026-06-12-real-full-081903",
+    "last_summary": "本日报基于 12 条真实来源，判断近期 AI 前沿的主线从模型能力宣传转向 agent 工程化：GitHub Copilot CLI 引入 LSP 与 custom agents，OpenAI Codex 进入云采购和科研案例，Hugging Face 推动 OpenEnv 与 agent-optimized CLI，",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "OpenAI Codex enterprise/scientific signals",
+    "first_covered_at": "2026-06-12T08:31:26+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-12T08:31:26+08:00",
+    "last_output_label": "2026-06-12-real-full-081903",
+    "last_run_id": "2026-06-12-real-full-081903",
+    "last_summary": "本日报基于 12 条真实来源，判断近期 AI 前沿的主线从模型能力宣传转向 agent 工程化：GitHub Copilot CLI 引入 LSP 与 custom agents，OpenAI Codex 进入云采购和科研案例，Hugging Face 推动 OpenEnv 与 agent-optimized CLI，",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "OpenAI Frontier Governance Framework 映射监管与安全实践",
     "first_covered_at": "2026-06-02T07:28:07+08:00",
     "covered_count": 1,
@@ -57,6 +207,36 @@
     "last_output_label": "2026-06-02-real-test-071617",
     "last_run_id": "2026-06-02-real-test-071617",
     "last_summary": "近期 AI 前沿从单点模型能力转向可执行系统、治理评估和具身/多模态落地。OpenAI 强调第三方评估与治理框架，Google 强化 Gemini 的 action/multimodal 产品化，NVIDIA Cosmos 3 与 Reachy Mini 推动 physical AI 和本地机器人交互，GrepSeek",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "OpenAI to acquire Ona",
+    "first_covered_at": "2026-06-14T08:39:12+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-14T08:39:12+08:00",
+    "last_output_label": "2026-06-14-real-full-082414",
+    "last_run_id": "2026-06-14-real-full-082414",
+    "last_summary": "本期真实来源报告显示，AI 前沿从单点模型发布转向工程化系统竞争：OpenAI 强化 Codex 云端持久环境和企业 adoption，Google 继续推进 Gemini 多模态产品演示，Hugging Face/AllenAI 推动评测工作台和 agentic RL 环境，vLLM/Transformers/Oll",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "OpenAI 强化企业云采购与工作流入口",
+    "first_covered_at": "2026-06-17T09:32:02+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-17T09:32:02+08:00",
+    "last_output_label": "2026-06-17-real-full-092233",
+    "last_run_id": "2026-06-17-real-full-092233",
+    "last_summary": "本日报基于 12 条真实来源，覆盖 OpenAI deployment simulation 与企业入口扩展、Google Gemini / AI Studio 的产品化演示、三篇 arXiv 研究进展，以及 LangChain、Langflow、openpilot 等 GitHub 项目的开发者生态信号。核心趋势是 ",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "OpenAI 用 deployment simulation 预测模型发布后的行为",
+    "first_covered_at": "2026-06-17T09:32:02+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-17T09:32:02+08:00",
+    "last_output_label": "2026-06-17-real-full-092233",
+    "last_run_id": "2026-06-17-real-full-092233",
+    "last_summary": "本日报基于 12 条真实来源，覆盖 OpenAI deployment simulation 与企业入口扩展、Google Gemini / AI Studio 的产品化演示、三篇 arXiv 研究进展，以及 LangChain、Langflow、openpilot 等 GitHub 项目的开发者生态信号。核心趋势是 ",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
@@ -80,6 +260,26 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "OpenEnv + hf CLI for agents",
+    "first_covered_at": "2026-06-12T08:31:26+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-12T08:31:26+08:00",
+    "last_output_label": "2026-06-12-real-full-081903",
+    "last_run_id": "2026-06-12-real-full-081903",
+    "last_summary": "本日报基于 12 条真实来源，判断近期 AI 前沿的主线从模型能力宣传转向 agent 工程化：GitHub Copilot CLI 引入 LSP 与 custom agents，OpenAI Codex 进入云采购和科研案例，Hugging Face 推动 OpenEnv 与 agent-optimized CLI，",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "OpenEnv 推动 agentic RL 开放环境生态",
+    "first_covered_at": "2026-06-13T09:42:29+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-13T09:42:29+08:00",
+    "last_output_label": "2026-06-13-real-full-093347",
+    "last_run_id": "2026-06-13-real-full-093347",
+    "last_summary": "本报告基于 12 条真实来源，覆盖 OpenAI 企业工作流与云采购动作、GitHub Copilot CLI 的 agent 编排与 LSP 语义增强、Google Gemini 产品化演示、Hugging Face / AllenAI 评测工具、OpenEnv agentic RL 环境、arXiv agent 评",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "OpenEnv 获 Hugging Face 社区支持，Agentic RL 需要开放环境栈",
     "first_covered_at": "2026-06-09T16:20:03+08:00",
     "covered_count": 1,
@@ -90,6 +290,16 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "PhaseWin 推动视觉归因从展示图走向审计工具",
+    "first_covered_at": "2026-06-17T09:32:02+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-17T09:32:02+08:00",
+    "last_output_label": "2026-06-17-real-full-092233",
+    "last_run_id": "2026-06-17-real-full-092233",
+    "last_summary": "本日报基于 12 条真实来源，覆盖 OpenAI deployment simulation 与企业入口扩展、Google Gemini / AI Studio 的产品化演示、三篇 arXiv 研究进展，以及 LangChain、Langflow、openpilot 等 GitHub 项目的开发者生态信号。核心趋势是 ",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "Physical AI 进入模型、数据、机器人硬件联动阶段",
     "first_covered_at": "2026-06-02T17:33:37+08:00",
     "covered_count": 1,
@@ -97,6 +307,16 @@
     "last_output_label": "2026-06-02-real-test-171928",
     "last_run_id": "2026-06-02-real-test-171928",
     "last_summary": "本轮真实来源报告覆盖 12 个近期高质量来源。主要趋势包括 Physical AI 从模型发布走向数据合成和本地机器人交互，agent 生态从工具调用走向长程、流式、可治理运行时，AI infra 围绕 vLLM、Transformers 和专用代码模型继续快速迭代。",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "ReAct agentic loop 的领域工具抽象进入光网络自动化",
+    "first_covered_at": "2026-06-17T09:32:02+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-17T09:32:02+08:00",
+    "last_output_label": "2026-06-17-real-full-092233",
+    "last_run_id": "2026-06-17-real-full-092233",
+    "last_summary": "本日报基于 12 条真实来源，覆盖 OpenAI deployment simulation 与企业入口扩展、Google Gemini / AI Studio 的产品化演示、三篇 arXiv 研究进展，以及 LangChain、Langflow、openpilot 等 GitHub 项目的开发者生态信号。核心趋势是 ",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
@@ -120,6 +340,16 @@
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {
+    "topic": "arxiv-vlm-verifiers-regress",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
     "topic": "browser-use/video-use 显示 coding agents 向媒体编辑扩展",
     "first_covered_at": "2026-06-02T07:28:07+08:00",
     "covered_count": 1,
@@ -137,6 +367,136 @@
     "last_output_label": "2026-06-02-real-test-071617",
     "last_run_id": "2026-06-02-real-test-071617",
     "last_summary": "近期 AI 前沿从单点模型能力转向可执行系统、治理评估和具身/多模态落地。OpenAI 强调第三方评估与治理框架，Google 强化 Gemini 的 action/multimodal 产品化，NVIDIA Cosmos 3 与 Reachy Mini 推动 physical AI 和本地机器人交互，GrepSeek",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "github-karpathy-autoresearch",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "google-ai-may-2026",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "google-io-gemini-demos",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "hf-olmo-eval",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "hf-openenv-agentic-rl",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "mistral-search-toolkit",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "mistral-vibe-agent",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "olmo-eval and OpenEnv",
+    "first_covered_at": "2026-06-14T08:39:12+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-14T08:39:12+08:00",
+    "last_output_label": "2026-06-14-real-full-082414",
+    "last_run_id": "2026-06-14-real-full-082414",
+    "last_summary": "本期真实来源报告显示，AI 前沿从单点模型发布转向工程化系统竞争：OpenAI 强化 Codex 云端持久环境和企业 adoption，Google 继续推进 Gemini 多模态产品演示，Hugging Face/AllenAI 推动评测工作台和 agentic RL 环境，vLLM/Transformers/Oll",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "olmo-eval 与 ProofAgent Harness 指向评测基础设施化",
+    "first_covered_at": "2026-06-13T09:42:29+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-13T09:42:29+08:00",
+    "last_output_label": "2026-06-13-real-full-093347",
+    "last_run_id": "2026-06-13-real-full-093347",
+    "last_summary": "本报告基于 12 条真实来源，覆盖 OpenAI 企业工作流与云采购动作、GitHub Copilot CLI 的 agent 编排与 LSP 语义增强、Google Gemini 产品化演示、Hugging Face / AllenAI 评测工具、OpenEnv agentic RL 环境、arXiv agent 评",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "openai-ona-codex",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "openai-partner-network",
+    "first_covered_at": "2026-06-15T09:51:31+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-15T09:51:31+08:00",
+    "last_output_label": "2026-06-15-real-full-093900",
+    "last_run_id": "2026-06-15-real-full-093900",
+    "last_summary": "本轮真实来源显示，AI 行业重点从单点模型发布转向企业交付生态、持久云端 coding agent、检索/agent 工具链和评测治理。OpenAI、Google、Mistral 推动产品化与企业化，Hugging Face/AllenAI/OpenEnv 代表开源评测与 agentic RL 基础设施信号，arXiv",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "openai/codex 与 SGLang release 显示 developer / infra 生态持续活跃",
+    "first_covered_at": "2026-06-13T09:42:29+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-13T09:42:29+08:00",
+    "last_output_label": "2026-06-13-real-full-093347",
+    "last_run_id": "2026-06-13-real-full-093347",
+    "last_summary": "本报告基于 12 条真实来源，覆盖 OpenAI 企业工作流与云采购动作、GitHub Copilot CLI 的 agent 编排与 LSP 语义增强、Google Gemini 产品化演示、Hugging Face / AllenAI 评测工具、OpenEnv agentic RL 环境、arXiv agent 评",
+    "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
+  },
+  {
+    "topic": "vLLM / Transformers / Ollama releases",
+    "first_covered_at": "2026-06-14T08:39:12+08:00",
+    "covered_count": 1,
+    "last_covered_at": "2026-06-14T08:39:12+08:00",
+    "last_output_label": "2026-06-14-real-full-082414",
+    "last_run_id": "2026-06-14-real-full-082414",
+    "last_summary": "本期真实来源报告显示，AI 前沿从单点模型发布转向工程化系统竞争：OpenAI 强化 Codex 云端持久环境和企业 adoption，Google 继续推进 Gemini 多模态产品演示，Hugging Face/AllenAI 推动评测工作台和 agentic RL 环境，vLLM/Transformers/Oll",
     "repeat_policy": "Mention again only when there is a release, benchmark, adoption signal, GitHub activity change, pricing/business update, or controversy escalation."
   },
   {

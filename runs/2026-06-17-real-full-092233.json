@@ -1,0 +1,33 @@
+{
+  "run_id": "2026-06-17-real-full-092233",
+  "status": "completed",
+  "mode": "real_sources",
+  "profile": "technicalreportagent",
+  "skills": [
+    "clawmax:ai-technical-report",
+    "clawmax:daily-ai-media-pipeline"
+  ],
+  "started_at": "2026-06-17T09:22:33+08:00",
+  "finished_at": "2026-06-17T09:32:02+08:00",
+  "duration_seconds": 569.195,
+  "output_label": "2026-06-17-real-full-092233",
+  "output_dir": "reports/2026-06-17-real-full-092233",
+  "outputs": {
+    "report": "reports/2026-06-17-real-full-092233/technical-report.md",
+    "sources": "reports/2026-06-17-real-full-092233/sources.json",
+    "brief": "reports/2026-06-17-real-full-092233/brief.json",
+    "image_assets": "reports/2026-06-17-real-full-092233/image-assets.json"
+  },
+  "metrics": {
+    "report_chars": 10969,
+    "sources_used": 12,
+    "source_images": 8,
+    "covered_topics_updated": 6,
+    "source_hosts_updated": 12
+  },
+  "proxy_env_keys": [
+    "ALL_PROXY",
+    "HTTPS_PROXY",
+    "HTTP_PROXY"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "run_id": "2026-06-12-real-full-081903-wechat-wechat",
+  "status": "completed",
+  "mode": "draft_and_structured_data",
+  "profile": "wechatarticleagent",
+  "skills": [
+    "clawmax:wechat-article-drafting",
+    "clawmax:daily-ai-media-pipeline"
+  ],
+  "started_at": "2026-06-12T00:31:26.690044+00:00",
+  "finished_at": "2026-06-12T00:39:43.827548+00:00",
+  "duration_seconds": 497.137,
+  "input_report_label": "2026-06-12-real-full-081903",
+  "output_label": "2026-06-12-real-full-081903-wechat",
+  "input_dir": "reports/2026-06-12-real-full-081903",
+  "output_dir": "articles/2026-06-12-real-full-081903-wechat",
+  "outputs": {
+    "draft": "articles/2026-06-12-real-full-081903-wechat/wechat-draft.md",
+    "article_json": "articles/2026-06-12-real-full-081903-wechat/article.json",
+    "metadata": "articles/2026-06-12-real-full-081903-wechat/metadata.json",
+    "final_article": "articles/2026-06-12-real-full-081903-wechat/final-wechat-article.md",
+    "html_preview": "articles/2026-06-12-real-full-081903-wechat/wechat-preview.html",
+    "image_assets": "articles/2026-06-12-real-full-081903-wechat/image-assets.json",
+    "images_dir": "articles/2026-06-12-real-full-081903-wechat/images",
+    "qa_report": "articles/2026-06-12-real-full-081903-wechat/qa-report.json",
+    "review_notes": "articles/2026-06-12-real-full-081903-wechat/review-notes.md"
+  },
+  "metrics": {
+    "draft_chars": 7341,
+    "final_article_chars": 7826,
+    "html_preview_chars": 14046,
+    "section_count": 6,
+    "title_candidate_count": 5,
+    "risk_flag_count": 7,
+    "image_asset_count": 10,
+    "saved_image_count": 10
+  },
+  "qa": {
+    "status": "passed",
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "issues": 0
+    },
+    "issue_count": 0
+  },
+  "auto_publish": false,
+  "proxy_env_keys": [
+    "ALL_PROXY",
+    "HTTPS_PROXY",
+    "HTTP_PROXY"
+  ]
+}

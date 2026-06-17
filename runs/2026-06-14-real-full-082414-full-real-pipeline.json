@@ -1,0 +1,24 @@
+{
+  "run_id": "2026-06-14-real-full-082414-full-real-pipeline",
+  "status": "failed",
+  "mode": "full_real_pipeline",
+  "started_at": "2026-06-14T08:24:14+08:00",
+  "report_label": "2026-06-14-real-full-082414",
+  "article_label": "2026-06-14-real-full-082414-wechat",
+  "steps": [
+    {
+      "name": "technical_report",
+      "status": "completed",
+      "finished_at": "2026-06-14T08:39:12+08:00"
+    }
+  ],
+  "commands": {
+    "technical_report": "/usr/bin/python3 tests/test_technical_report_agent_run.py --output-label 2026-06-14-real-full-082414 --timeout 1800",
+    "wechat_article": "/usr/bin/python3 tests/test_wechat_article_agent_run.py --report-label 2026-06-14-real-full-082414 --output-label 2026-06-14-real-full-082414-wechat --timeout 2400",
+    "wechat_draft": "/usr/bin/python3 scripts/publish_wechat_article.py --article-label 2026-06-14-real-full-082414-wechat --mode draft --author ClawMax",
+    "product_strategy": "/usr/bin/python3 scripts/run_product_strategy_agent.py --report-label 2026-06-14-real-full-082414 --article-label 2026-06-14-real-full-082414-wechat"
+  },
+  "outputs": {},
+  "finished_at": "2026-06-14T08:44:38+08:00",
+  "error": "2/4 real WeChatArticleAgent + QA failed with exit code 1"
+}

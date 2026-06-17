@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-06-12-real-full-081903-full-real-pipeline",
+  "status": "failed",
+  "mode": "full_real_pipeline",
+  "started_at": "2026-06-12T08:19:03+08:00",
+  "report_label": "2026-06-12-real-full-081903",
+  "article_label": "2026-06-12-real-full-081903-wechat",
+  "steps": [
+    {
+      "name": "technical_report",
+      "status": "completed",
+      "finished_at": "2026-06-12T08:31:26+08:00"
+    },
+    {
+      "name": "wechat_article_and_qa",
+      "status": "completed",
+      "finished_at": "2026-06-12T08:39:43+08:00"
+    }
+  ],
+  "commands": {
+    "technical_report": "/usr/bin/python3 tests/test_technical_report_agent_run.py --output-label 2026-06-12-real-full-081903 --timeout 1800",
+    "wechat_article": "/usr/bin/python3 tests/test_wechat_article_agent_run.py --report-label 2026-06-12-real-full-081903 --output-label 2026-06-12-real-full-081903-wechat --timeout 2400",
+    "wechat_draft": "/usr/bin/python3 scripts/publish_wechat_article.py --article-label 2026-06-12-real-full-081903-wechat --mode draft --author ClawMax",
+    "product_strategy": "/usr/bin/python3 scripts/run_product_strategy_agent.py --report-label 2026-06-12-real-full-081903 --article-label 2026-06-12-real-full-081903-wechat"
+  },
+  "outputs": {},
+  "finished_at": "2026-06-12T08:39:44+08:00",
+  "error": "3/4 live WeChat backend draft creation failed with exit code 2"
+}
